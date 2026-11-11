@@ -1,0 +1,58 @@
+{
+  "velocita": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Velocità",
+    "items": [
+      "Lento",
+      "Medio",
+      "Dinamico"
+    ]
+  },
+  "palette": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Palette colori",
+    "items": [
+      "Neon",
+      "Notturno",
+      "Pastello",
+      "Mono"
+    ]
+  },
+  "schermi": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Schermi (usa la modalità Span)",
+    "items": [
+      "Automatico",
+      "1 schermo",
+      "2 schermi",
+      "3 schermi"
+    ]
+  },
+  "orologio": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Timer missione (orologio)"
+  },
+  "mouse": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Mirino sul mouse"
+  },
+  "glitch": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Glitch digitali"
+  },
+  "fps": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Fotogrammi al secondo",
+    "items": [
+      "30 (risparmio energetico)",
+      "60"
+    ]
+  }
+}

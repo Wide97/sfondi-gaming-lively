@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar Tattico</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#000}</style>
+</head>
+<body>
+<script>
+  // Carica kit.js (nel pacchetto) oppure ../../shared/kit.js (nel repo), poi lo sfondo.
+  (function () {
+    function load(src, ok, ko) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.body.appendChild(s); }
+    function main() { load('main.js'); }
+    load('kit.js', main, function () { load('../../shared/kit.js', main); });
+  })();
+</script>
+</body>
+</html>

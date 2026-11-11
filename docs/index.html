@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sfondi Gaming per Lively</title>
+<meta name="description" content="Sfondi animati a tema gaming per Windows (Lively Wallpaper), per 1, 2 o 3 schermi.">
+<style>
+  :root {
+    --bg: #07070d; --card: #10101a; --line: #23233a; --text: #ecebff; --muted: #9a98b8;
+    --a1: #ff2bd6; --a2: #00e5ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.55 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  a { color: var(--a2); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 56px 0 28px; }
+  h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+  h1 span { background: linear-gradient(90deg, var(--a1), var(--a2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { color: var(--muted); font-size: 18px; max-width: 720px; margin: 0; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 28px 0 8px; padding: 0; list-style: none; counter-reset: s; }
+  .steps li { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; counter-increment: s; color: var(--muted); font-size: 15px; }
+  .steps li::before { content: counter(s); display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--a1), var(--a2)); color: #000; font-weight: 700; font-size: 13px; margin-right: 8px; }
+  .steps b { color: var(--text); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin: 28px 0; }
+  .shot { position: relative; background: #000; aspect-ratio: 16 / 9; display: grid; place-items: center; }
+  .shot img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .body { padding: 20px; display: grid; gap: 14px; }
+  .title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+  .title h2 { margin: 0; font-size: 26px; }
+  .tag { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--a2); border: 1px solid var(--line); border-radius: 99px; padding: 2px 10px; }
+  .desc { margin: 0; color: var(--muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .label { font-size: 13px; color: var(--muted); min-width: 70px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg button { background: none; border: 0; color: var(--muted); padding: 7px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: #1d1d30; color: var(--text); }
+  .seg button:focus-visible, .btn:focus-visible { outline: 2px solid var(--a2); outline-offset: 2px; }
+  .extras { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+  .extras li { font-size: 13px; background: #171726; border-radius: 8px; padding: 4px 10px; color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 600; font-size: 15px;
+    padding: 10px 16px; border-radius: 10px; border: 1px solid var(--line); color: var(--text); background: #171726; }
+  .btn.primary { border: 0; color: #000; background: linear-gradient(90deg, var(--a1), var(--a2)); }
+  footer { color: var(--muted); font-size: 14px; padding: 32px 0 56px; border-top: 1px solid var(--line); margin-top: 40px; }
+  @media (min-width: 900px) { .body { padding: 24px 28px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Sfondi animati <span>gaming</span> per Windows</h1>
+    <p class="lead">Quattro sfondi animati per <a href="https://www.rocksdanister.com/lively/">Lively Wallpaper</a>: cyberpunk, sci-fi, fantasy e tattico.
+      Funzionano su 1, 2 o 3 schermi, hanno 4 palette di colori e 3 velocità.</p>
+    <ol class="steps">
+      <li><b>Installa Lively</b>: è gratis, anche dal Microsoft Store.</li>
+      <li><b>Scarica lo .zip</b> dello sfondo che ti piace.</li>
+      <li><b>Trascinalo</b> nella finestra di Lively e applicalo.</li>
+      <li><b>Più monitor?</b> Scegli la disposizione <b>Span</b> in Lively.</li>
+    </ol>
+  </header>
+  <main id="list"></main>
+  <footer>
+    Licenza MIT · <a id="repo" href="#">Codice sorgente su GitHub</a> · Le demo live girano nel browser: muovi il mouse per provare l'interattività.
+  </footer>
+</div>
+
+<script>
+  const WALLS = [
+    { dir: 'neon-city', title: 'Neon City', tag: 'Cyberpunk',
+      desc: 'Skyline notturna su tre livelli di parallasse, pioggia, insegne al neon che sfarfallano e auto volanti. Le finestre pulsano a tempo di musica.',
+      extras: ['Orologio come insegna al neon', 'Reagisce alla musica', 'Pioggia attivabile'] },
+    { dir: 'ponte-di-comando', title: 'Ponte di Comando', tag: 'Sci-fi',
+      desc: "Sei sulla plancia di un'astronave: un gigante gassoso con anelli, una luna in orbita, la nebulosa e un HUD olografico. Su più schermi i montanti della cabina coincidono con le cornici dei monitor.",
+      extras: ['Orologio di bordo + data stellare', 'Parallasse con il mouse', 'Cornice della plancia'] },
+    { dir: 'portale-arcano', title: 'Portale Arcano', tag: 'Fantasy / RPG',
+      desc: 'Cerchi di rune che ruotano in direzioni opposte, un vortice di energia, cristalli sospesi e lucciole. Muovendo il mouse lasci una scia di scintille.',
+      extras: ['Scintille dal mouse', 'Rune che pulsano con la musica', 'Orologio'] },
+    { dir: 'radar-tattico', title: 'Radar Tattico', tag: 'FPS / Tattico',
+      desc: 'Radar con fascio rotante su mappa topografica, contatti che si accendono al passaggio, stato della squadra e registro operazioni. Il cursore diventa un mirino che aggancia i bersagli.',
+      extras: ['Mirino che aggancia i bersagli', 'Timer missione (orologio)', 'Glitch digitali'] },
+  ];
+  const PALETTES = ['Neon', 'Notturno', 'Pastello', 'Mono'];
+
+  // owner/repo ricavati dall'indirizzo di GitHub Pages (owner.github.io/repo)
+  const owner = location.hostname.endsWith('github.io') ? location.hostname.split('.')[0] : null;
+  const repo = location.pathname.split('/').filter(Boolean)[0];
+  if (owner && repo) document.getElementById('repo').href = `https://github.com/${owner}/${repo}`;
+
+  const list = document.getElementById('list');
+  for (const w of WALLS) {
+    const state = { p: 0, s: 1 };
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="shot"><img alt="Anteprima di ${w.title}" loading="lazy" src="img/${w.dir}.jpg"></div>
+      <div class="body">
+        <div class="title"><h2>${w.title}</h2><span class="tag">${w.tag}</span></div>
+        <p class="desc">${w.desc}</p>
+        <div class="row"><span class="label">Palette</span><div class="seg" data-k="p">${PALETTES.map((n, i) => `<button type="button" data-v="${i}" aria-pressed="${i === 0}">${n}</button>`).join('')}</div></div>
+        <div class="row"><span class="label">Schermi</span><div class="seg" data-k="s">${[1, 2, 3].map((n) => `<button type="button" data-v="${n}" aria-pressed="${n === 1}">${n}</button>`).join('')}</div></div>
+        <ul class="extras">${w.extras.map((e) => `<li>${e}</li>`).join('')}</ul>
+        <div class="actions">
+          <a class="btn primary" href="${w.dir}.zip" download>Scarica .zip per Lively</a>
+          <a class="btn demo" href="demo/${w.dir}/index.html" target="_blank" rel="noopener">Demo live ↗</a>
+        </div>
+      </div>`;
+    const img = card.querySelector('img'), demo = card.querySelector('.demo');
+    const update = () => {
+      // le anteprime per palette sono su 1 schermo; quelle multi-schermo usano la palette Neon
+      img.src = state.s === 1 ? (state.p === 0 ? `img/${w.dir}.jpg` : `img/${w.dir}-p${state.p}.jpg`) : `img/${w.dir}-${state.s}s.jpg`;
+      card.querySelector('.shot').style.aspectRatio = `${16 * state.s} / 9`;
+      demo.href = `demo/${w.dir}/index.html?palette=${state.p}`;
+      card.querySelectorAll('.seg').forEach((seg) => seg.querySelectorAll('button')
+        .forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state[seg.dataset.k]))));
+    };
+    card.querySelectorAll('.seg').forEach((seg) => seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      state[seg.dataset.k] = +b.dataset.v;
+      if (seg.dataset.k === 'p' && state.s !== 1) state.s = 1;     // le palette si vedono su 1 schermo
+      if (seg.dataset.k === 's' && state.s !== 1) state.p = 0;
+      update();
+    }));
+    list.appendChild(card);
+  }
+</script>
+</body>
+</html>

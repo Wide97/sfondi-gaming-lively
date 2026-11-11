@@ -1,0 +1,71 @@
+name: Pacchetti, sito e release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pubblica-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Controllo sintassi
+        run: for f in shared/kit.js wallpapers/*/main.js scripts/*.mjs; do node --check "$f"; done
+      - name: Prepara i pacchetti
+        run: node scripts/pacchetti.mjs
+      - name: Crea gli .zip per Lively
+        run: |
+          mkdir -p dist/zip
+          for d in dist/wallpapers/*/; do
+            n=$(basename "$d")
+            (cd "$d" && zip -qr "../../zip/$n.zip" .)
+          done
+          cp dist/zip/*.zip dist/site/
+          ls -la dist/zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sfondi-zip
+          path: dist/zip/*.zip
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/site
+
+  pages:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: sfondi-zip
+          path: zip
+      - name: Crea la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" zip/*.zip --title "Sfondi Gaming $GITHUB_REF_NAME" --notes-file .github/note-release.md
