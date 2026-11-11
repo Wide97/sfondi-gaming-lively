@@ -1,0 +1,68 @@
+{
+  "velocita": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Velocità",
+    "items": [
+      "Lento",
+      "Medio",
+      "Dinamico"
+    ]
+  },
+  "palette": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Palette colori",
+    "items": [
+      "Rossonero",
+      "Notte di Coppa",
+      "Trasferta",
+      "Oro"
+    ]
+  },
+  "schermi": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Schermi (usa la modalità Span)",
+    "items": [
+      "Automatico",
+      "1 schermo",
+      "2 schermi affiancati (principale a destra)",
+      "3 schermi a L (principale, destra, sopra)"
+    ]
+  },
+  "scritta": {
+    "type": "textbox",
+    "value": "FORZA MILAN",
+    "text": "Scritta della coreografia"
+  },
+  "orologio": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Orologio sul tabellone"
+  },
+  "fumogeni": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Fumogeni"
+  },
+  "mouse": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Fuochi d'artificio al clic"
+  },
+  "audio": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Reagisci alla musica"
+  },
+  "fps": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Fotogrammi al secondo",
+    "items": [
+      "30 (risparmio energetico)",
+      "60"
+    ]
+  }
+}

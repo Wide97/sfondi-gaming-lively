@@ -13,3 +13,4 @@ Tutti i dettagli sono nel [README](https://github.com/Wide97/sfondi-gaming-livel
 | `ponte-di-comando.zip` | Ponte di Comando (sci-fi) |
 | `portale-arcano.zip` | Portale Arcano (fantasy) |
 | `radar-tattico.zip` | Radar Tattico (FPS / tattico) |
+| `rossoneri.zip` | Rossoneri (calcio, Curva Sud, non ufficiale) |

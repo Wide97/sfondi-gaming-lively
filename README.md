@@ -2,7 +2,7 @@
 
 Sfondi **animati** a tema gaming per il desktop di **Windows**, da usare con [Lively Wallpaper](https://www.rocksdanister.com/lively/) (gratuito e open source).
 
-- 4 sfondi: **cyberpunk, sci-fi, fantasy e tattico**
+- 5 sfondi: **cyberpunk, sci-fi, fantasy, tattico** e una **notte rossonera in curva**
 - Funzionano su **1 schermo, 2 affiancati o 3 a L**: la scena scorre da un monitor all'altro verso quello principale
 - **4 palette** (Neon, Notturno, Pastello, Mono) e **3 velocità** (Lento, Medio, Dinamico)
 - Alcuni sfondi reagiscono alla **musica** e al **mouse**
@@ -22,6 +22,9 @@ Sfondi **animati** a tema gaming per il desktop di **Windows**, da usare con [Li
 | <img src="docs/img/ponte-di-comando.jpg" width="260"> | **Ponte di Comando**<br>_Sci-fi_ | Vista dalla plancia di un'astronave: gigante gassoso con anelli, luna in orbita, nebulosa, HUD olografico | 🖱️ parallasse · 🕒 orologio di bordo · 🛸 cornice |
 | <img src="docs/img/portale-arcano.jpg" width="260"> | **Portale Arcano**<br>_Fantasy / RPG_ | Cerchi di rune rotanti, vortice di energia, cristalli sospesi, lucciole | 🖱️ scintille · 🎵 musica · 🕒 orologio |
 | <img src="docs/img/radar-tattico.jpg" width="260"> | **Radar Tattico**<br>_FPS / Tattico_ | Radar con fascio rotante su mappa topografica, stato squadra, registro operazioni | 🖱️ mirino che aggancia i bersagli · 🕒 timer missione · ⚡ glitch |
+| <img src="docs/img/rossoneri.jpg" width="260"> | **Rossoneri**<br>_Calcio · Curva Sud_ | Notte di stadio: coreografia rossonera con sette stelle, bandiere, fumogeni, la ola, fuochi d'artificio. Palette: Rossonero, Notte di Coppa, Trasferta, Oro | ✍️ scritta personalizzabile · 🖱️ fuochi al clic · 🎵 musica · 🕒 tabellone |
+
+> **Rossoneri** è uno sfondo **non ufficiale** fatto da tifosi: non è affiliato né approvato dal club e non usa stemmi, loghi o marchi ufficiali. Ci sono solo i colori, la scritta della coreografia (modificabile) e l'atmosfera da stadio.
 
 ### Le 4 palette
 
@@ -74,6 +77,7 @@ Gli schermi non sono indipendenti: la scena è **una sola** e scorre da un monit
 | **Ponte di Comando** | il pianeta | le navette partono dai secondari (con 3 schermi dalla stazione orbitale di sopra) e atterrano sul pianeta; un collegamento dati porta pacchetti dai pannelli al bersaglio; i montanti della cabina coincidono con le cornici dei monitor |
 | **Portale Arcano** | il grande portale | su ogni secondario un cerchio di rune manda un fiume di energia dentro il portale; le lucciole salgono da uno schermo all'altro |
 | **Radar Tattico** | il radar | ogni contatto rilevato parte come pacchetto dal radar e arriva al registro sul secondario; con 3 schermi un satellite di sopra manda scansioni giù al radar |
+| **Rossoneri** | la curva con la coreografia, la porta e il tabellone | la ola e i tabelloni LED a bordo campo scorrono dai secondari verso la curva; con 3 schermi fumo, fasci di luce e fuochi d'artificio salgono nello schermo di sopra |
 
 **Come si attiva:**
 1. In Lively scegli la disposizione **Span**, cioè un solo sfondo esteso su tutti i monitor.
@@ -89,6 +93,7 @@ Gli schermi non sono indipendenti: la scena è **una sola** e scorre da un monit
 ![Portale Arcano su 3 schermi](docs/img/portale-arcano-3s.jpg)
 ![Radar Tattico su 3 schermi](docs/img/radar-tattico-3s.jpg)
 ![Neon City su 3 schermi](docs/img/neon-city-3s.jpg)
+![Rossoneri su 3 schermi](docs/img/rossoneri-3s.jpg)
 
 > 💡 Preferisci uno sfondo diverso per ogni monitor? Usa in Lively la disposizione **Per schermo** e imposta **Schermi = 1 schermo** su ciascuno.
 
@@ -119,7 +124,8 @@ sfondi-gaming-lively/
 ├─ docs/                      galleria GitHub Pages + immagini
 ├─ scripts/
 │  ├─ anteprime.mjs           rigenera le anteprime con Edge headless
-│  └─ pacchetti.mjs           prepara dist/ (pacchetti Lively + sito)
+│  ├─ pacchetti.mjs           prepara dist/ (pacchetti Lively + sito)
+│  └─ configura.mjs           genera index.html e i JSON di Lively per ogni sfondo
 └─ .github/workflows/         a ogni push aggiorna il sito, a ogni tag v* crea la release con gli .zip
 ```
 
@@ -136,7 +142,7 @@ git tag v1.1.0
 git push --tags
 ```
 
-**Aggiungere uno sfondo**: copia una cartella in `wallpapers/`, scrivi la scena in `main.js` con `Kit.start({ palettes, defaults, build, draw })` e usa `Kit.layout()` per posizionare gli elementi per 1, 2 o 3 schermi.
+**Aggiungere uno sfondo**: aggiungi una voce in `scripts/configura.mjs` e lancialo, scrivi la scena in `main.js` con `Kit.start({ palettes, defaults, build, draw })` e usa `Kit.layout()` per posizionare gli elementi per 1, 2 o 3 schermi.
 
 ## Licenza
 

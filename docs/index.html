@@ -53,7 +53,7 @@
 <div class="wrap">
   <header>
     <h1>Sfondi animati <span>gaming</span> per Windows</h1>
-    <p class="lead">Quattro sfondi animati per <a href="https://www.rocksdanister.com/lively/">Lively Wallpaper</a>: cyberpunk, sci-fi, fantasy e tattico.
+    <p class="lead">Cinque sfondi animati per <a href="https://www.rocksdanister.com/lively/">Lively Wallpaper</a>: cyberpunk, sci-fi, fantasy, tattico e una notte rossonera in curva.
       Funzionano su 1, 2 o 3 schermi, hanno 4 palette di colori e 3 velocità.</p>
     <ol class="steps">
       <li><b>Installa Lively</b>: è gratis, anche dal Microsoft Store.</li>
@@ -82,6 +82,10 @@
     { dir: 'radar-tattico', title: 'Radar Tattico', tag: 'FPS / Tattico',
       desc: 'Radar con fascio rotante su mappa topografica, contatti che si accendono al passaggio, stato della squadra e registro operazioni. Il cursore diventa un mirino che aggancia i bersagli.',
       extras: ['Mirino che aggancia i bersagli', 'Timer missione (orologio)', 'Glitch digitali'] },
+    { dir: 'rossoneri', title: 'Rossoneri', tag: 'Calcio · Curva Sud',
+      pals: ['Rossonero', 'Notte di Coppa', 'Trasferta', 'Oro'],
+      desc: "Notte di stadio in curva: coreografia rossonera con sette stelle, bandiere al vento, fumogeni, la ola che arriva dagli altri schermi e fuochi d'artificio. La scritta della coreografia si può cambiare. Sfondo non ufficiale fatto da tifosi, senza loghi del club.",
+      extras: ['Scritta della coreografia personalizzabile', "Fuochi d'artificio al clic", 'Reagisce alla musica', 'Orologio sul tabellone'] },
   ];
   const PALETTES = ['Neon', 'Notturno', 'Pastello', 'Mono'];
 
@@ -100,7 +104,7 @@
       <div class="body">
         <div class="title"><h2>${w.title}</h2><span class="tag">${w.tag}</span></div>
         <p class="desc">${w.desc}</p>
-        <div class="row"><span class="label">Palette</span><div class="seg" data-k="p">${PALETTES.map((n, i) => `<button type="button" data-v="${i}" aria-pressed="${i === 0}">${n}</button>`).join('')}</div></div>
+        <div class="row"><span class="label">Palette</span><div class="seg" data-k="p">${(w.pals || PALETTES).map((n, i) => `<button type="button" data-v="${i}" aria-pressed="${i === 0}">${n}</button>`).join('')}</div></div>
         <div class="row"><span class="label">Schermi</span><div class="seg" data-k="s">${[[1, '1'], [2, '2 affiancati'], [3, '3 a L']].map(([n, t]) => `<button type="button" data-v="${n}" aria-pressed="${n === 1}">${t}</button>`).join('')}</div></div>
         <ul class="extras">${w.extras.map((e) => `<li>${e}</li>`).join('')}</ul>
         <div class="actions">

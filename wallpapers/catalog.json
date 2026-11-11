@@ -38,5 +38,17 @@
       "Mirino sul mouse",
       "Glitch digitali"
     ]
+  },
+  {
+    "dir": "rossoneri",
+    "title": "Rossoneri",
+    "desc": "Notte di stadio in Curva Sud: coreografia rossonera, bandiere, fumogeni, ola e fuochi d'artificio. Sfondo non ufficiale fatto da tifosi, non affiliato al club.",
+    "extras": [
+      "Scritta della coreografia",
+      "Orologio sul tabellone",
+      "Fumogeni",
+      "Fuochi d'artificio al clic",
+      "Reagisci alla musica"
+    ]
   }
 ]
