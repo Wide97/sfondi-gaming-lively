@@ -54,30 +54,70 @@
   };
 
   /* ---------- multi-schermo ---------- */
-  // Rilevamento automatico dalle proporzioni dell'area totale:
-  // 16:9 ≈ 1.78 → 1 schermo · 32:9 ≈ 3.56 → 2 schermi · 48:9 ≈ 5.33 → 3 schermi
+  // In modalità "Span" Lively crea un'unica finestra grande quanto il rettangolo che
+  // contiene tutti i monitor. Disposizioni supportate (monitor uguali e allineati):
+  //
+  //   1 schermo     [ PRINCIPALE ]
+  //
+  //   2 schermi     [ sinistra ][ PRINCIPALE ]
+  //
+  //   3 schermi     [ sopra      ]  (vuoto)        ← l'angolo in alto a destra non ha monitor
+  //                 [ PRINCIPALE ][ destra ]
+  //
+  // Rilevamento automatico: confronta l'area totale con la dimensione di un monitor.
   function detectScreens() {
-    const a = innerWidth / Math.max(1, innerHeight);
-    return a > 4.6 ? 3 : a > 2.9 ? 2 : 1;
+    const sw = (window.screen && screen.width) || innerWidth, sh = (window.screen && screen.height) || innerHeight;
+    const nx = Math.round(innerWidth / sw), ny = Math.round(innerHeight / sh);
+    if (nx >= 2 && ny >= 2) return 3;
+    if (nx >= 2) return 2;
+    return innerWidth / Math.max(1, innerHeight) > 2.9 ? 2 : 1;
   }
 
-  // Zone = un rettangolo per ogni monitor. Gli elementi importanti stanno dentro una zona,
-  // mai a cavallo di due (dove c'è la cornice fisica dei monitor).
-  K.zones = function () {
-    const w = K.W / K.screens;
-    return Array.from({ length: K.screens }, (_, i) => ({
-      i, x: i * w, w, h: K.H, cx: i * w + w / 2, cy: K.H / 2, s: Math.min(w, K.H),
-    }));
+  const zone = (name, x, y, w, h) => ({ name, x, y, w, h, cx: x + w / 2, cy: y + h / 2, s: Math.min(w, h) });
+
+  // Restituisce le zone della disposizione corrente:
+  //  main            schermo principale (dove sta l'elemento centrale della scena)
+  //  left/right/top  schermi secondari (se presenti)
+  //  side            elenco dei secondari · zones = tutte le zone visibili · dead = aree senza monitor
+  //  flowDir         direzione orizzontale del flusso verso il principale (+1 → destra, -1 → sinistra)
+  //  rowY/rowH/ground  la fila in basso (orizzonte, città, console…)
+  let layCache = null, layKey = '';
+  K.layout = function () {
+    const key = `${K.W}x${K.H}:${K.screens}`;
+    if (layCache && layKey === key) return layCache;
+    const W = K.W, H = K.H;
+    let L;
+    if (K.screens === 2) {
+      const left = zone('sinistra', 0, 0, W / 2, H), main = zone('principale', W / 2, 0, W / 2, H);
+      L = { mode: 2, main, left, side: [left], zones: [left, main], dead: [], flowDir: 1 };
+    } else if (K.screens === 3) {
+      const w = W / 2, h = H / 2;
+      const main = zone('principale', 0, h, w, h), right = zone('destra', w, h, w, h), top = zone('sopra', 0, 0, w, h);
+      L = { mode: 3, main, right, top, side: [right, top], zones: [top, main, right], dead: [zone('vuoto', w, 0, w, h)], flowDir: -1 };
+    } else {
+      L = { mode: 1, main: zone('principale', 0, 0, W, H), side: [], dead: [], flowDir: -1 };
+      L.zones = [L.main];
+    }
+    L.rowY = L.main.y; L.rowH = L.main.h; L.ground = L.main.y + L.main.h;
+    layCache = L; layKey = key;
+    return L;
   };
 
-  // Restituisce la zona "principale" e le zone secondarie per il layout corrente.
-  //  1 schermo: [centro]       2 schermi: principale = sinistra, secondaria = destra
-  //  3 schermi: principale = centro, secondarie = lati
-  K.layout = function () {
-    const z = K.zones();
-    if (K.screens === 1) return { main: z[0], side: [], info: z[0], all: z };
-    if (K.screens === 2) return { main: z[0], side: [z[1]], info: z[1], all: z };
-    return { main: z[1], side: [z[0], z[2]], info: z[2], all: z };
+  // true se il punto cade su un monitor reale (non nell'angolo vuoto della disposizione a L)
+  K.visible = function (x, y) {
+    for (const d of K.layout().dead) if (x >= d.x && x < d.x + d.w && y >= d.y && y < d.y + d.h) return false;
+    return true;
+  };
+
+  // curva di Bézier quadratica: punto e tangente normalizzata
+  K.bez = function (p0, c, p1, u) {
+    const a = 1 - u;
+    return {
+      x: a * a * p0.x + 2 * a * u * c.x + u * u * p1.x,
+      y: a * a * p0.y + 2 * a * u * c.y + u * u * p1.y,
+      tx: 2 * a * (c.x - p0.x) + 2 * u * (p1.x - c.x),
+      ty: 2 * a * (c.y - p0.y) + 2 * u * (p1.y - c.y),
+    };
   };
 
   /* ---------- proprietà ---------- */

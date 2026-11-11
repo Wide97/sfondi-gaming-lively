@@ -4,7 +4,7 @@
 2. Scarica lo `.zip` dello sfondo che vuoi qui sotto, in **Assets**.
 3. Trascina lo `.zip` nella finestra di Lively e cliccaci sopra per applicarlo.
 
-Hai 2 o 3 monitor? Imposta in Lively la disposizione **Span** (estendi su tutti gli schermi): lo sfondo si adatta da solo.
+Hai più monitor? Imposta in Lively la disposizione **Span**: gli sfondi supportano 2 schermi affiancati (principale a destra) e 3 schermi a L (principale, destra, sopra), con la scena che scorre da un monitor all'altro.
 Tutti i dettagli sono nel [README](https://github.com/Wide97/sfondi-gaming-lively#readme).
 
 | File | Sfondo |

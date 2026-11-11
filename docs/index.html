@@ -59,7 +59,7 @@
       <li><b>Installa Lively</b>: è gratis, anche dal Microsoft Store.</li>
       <li><b>Scarica lo .zip</b> dello sfondo che ti piace.</li>
       <li><b>Trascinalo</b> nella finestra di Lively e applicalo.</li>
-      <li><b>Più monitor?</b> Scegli la disposizione <b>Span</b> in Lively.</li>
+      <li><b>Più monitor?</b> Scegli <b>Span</b> in Lively: 2 schermi affiancati o 3 a L, con la scena che scorre verso il principale.</li>
     </ol>
   </header>
   <main id="list"></main>
@@ -101,7 +101,7 @@
         <div class="title"><h2>${w.title}</h2><span class="tag">${w.tag}</span></div>
         <p class="desc">${w.desc}</p>
         <div class="row"><span class="label">Palette</span><div class="seg" data-k="p">${PALETTES.map((n, i) => `<button type="button" data-v="${i}" aria-pressed="${i === 0}">${n}</button>`).join('')}</div></div>
-        <div class="row"><span class="label">Schermi</span><div class="seg" data-k="s">${[1, 2, 3].map((n) => `<button type="button" data-v="${n}" aria-pressed="${n === 1}">${n}</button>`).join('')}</div></div>
+        <div class="row"><span class="label">Schermi</span><div class="seg" data-k="s">${[[1, '1'], [2, '2 affiancati'], [3, '3 a L']].map(([n, t]) => `<button type="button" data-v="${n}" aria-pressed="${n === 1}">${t}</button>`).join('')}</div></div>
         <ul class="extras">${w.extras.map((e) => `<li>${e}</li>`).join('')}</ul>
         <div class="actions">
           <a class="btn primary" href="${w.dir}.zip" download>Scarica .zip per Lively</a>
@@ -112,7 +112,7 @@
     const update = () => {
       // le anteprime per palette sono su 1 schermo; quelle multi-schermo usano la palette Neon
       img.src = state.s === 1 ? (state.p === 0 ? `img/${w.dir}.jpg` : `img/${w.dir}-p${state.p}.jpg`) : `img/${w.dir}-${state.s}s.jpg`;
-      card.querySelector('.shot').style.aspectRatio = `${16 * state.s} / 9`;
+      card.querySelector('.shot').style.aspectRatio = state.s === 2 ? '32 / 9' : '16 / 9';   // 3 schermi a L: area 2×2
       demo.href = `demo/${w.dir}/index.html?palette=${state.p}`;
       card.querySelectorAll('.seg').forEach((seg) => seg.querySelectorAll('button')
         .forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state[seg.dataset.k]))));

@@ -3,7 +3,7 @@
 Sfondi **animati** a tema gaming per il desktop di **Windows**, da usare con [Lively Wallpaper](https://www.rocksdanister.com/lively/) (gratuito e open source).
 
 - 4 sfondi: **cyberpunk, sci-fi, fantasy e tattico**
-- Funzionano su **1, 2 o 3 schermi**, e su più monitor nessun elemento importante finisce sotto le cornici
+- Funzionano su **1 schermo, 2 affiancati o 3 a L**: la scena scorre da un monitor all'altro verso quello principale
 - **4 palette** (Neon, Notturno, Pastello, Mono) e **3 velocità** (Lento, Medio, Dinamico)
 - Alcuni sfondi reagiscono alla **musica** e al **mouse**
 - Leggeri: niente video, solo codice. Lively li mette in pausa quando giochi a schermo intero
@@ -50,35 +50,45 @@ Nella libreria di Lively, clicca con il tasto destro sullo sfondo e scegli **Per
 |---|---|---|
 | Velocità | Lento · Medio · Dinamico | quanto si muove tutto |
 | Palette colori | Neon · Notturno · Pastello · Mono | |
-| Schermi | Automatico · 1 · 2 · 3 | vedi sotto |
+| Schermi | Automatico · 1 · 2 affiancati · 3 a L | vedi sotto |
 | Orologio | sì / no | ogni sfondo ha il suo stile |
 | Mouse / Musica | sì / no | solo negli sfondi che li supportano |
 | Fotogrammi al secondo | 30 · 60 | 30 consuma meno, utile sui portatili |
 
 ## 🖥️🖥️🖥️ Su 2 o 3 schermi
 
-1. In Lively apri la scelta dello schermo / disposizione e seleziona **Span** (estendi un solo sfondo su tutti i monitor).
-2. Applica lo sfondo. Con l'opzione **Schermi = Automatico** lo sfondo capisce dalle proporzioni quanti monitor hai:
-   - 16:9 → 1 schermo
-   - 32:9 → 2 schermi
-   - 48:9 → 3 schermi
+Gli sfondi sono pensati per queste disposizioni dei monitor:
 
-   Se hai monitor ultrawide o con risoluzioni diverse, imposta il numero a mano.
+```
+2 schermi affiancati            3 schermi a L
 
-Come si dispone la scena:
+[ secondario ][ PRINCIPALE ]    [ sopra      ]
+                                [ PRINCIPALE ][ destra ]
+```
 
-| Schermi | Disposizione |
-|---|---|
-| **1** | L'elemento principale è al centro, orologio e pannelli intorno |
-| **2** | Al centro c'è la cornice tra i monitor, quindi lì non c'è niente: ogni schermo ha il suo punto di interesse (ad esempio radar a sinistra, pannelli e orologio a destra) |
-| **3** | L'elemento principale sta sullo schermo centrale, quelli laterali fanno da contorno |
+Gli schermi non sono indipendenti: la scena è **una sola** e scorre da un monitor all'altro verso il principale.
 
-**2 schermi**
-![Radar Tattico su 2 schermi](docs/img/radar-tattico-2s.jpg)
+| Sfondo | Sul principale | Il flusso tra gli schermi |
+|---|---|---|
+| **Neon City** | megatorre e orologio al neon | la città, il traffico e la pioggia scorrono verso il principale; con 3 schermi la torre sale fino allo schermo di sopra e gli ascensori di luce la percorrono |
+| **Ponte di Comando** | il pianeta | le navette partono dai secondari (con 3 schermi dalla stazione orbitale di sopra) e atterrano sul pianeta; un collegamento dati porta pacchetti dai pannelli al bersaglio; i montanti della cabina coincidono con le cornici dei monitor |
+| **Portale Arcano** | il grande portale | su ogni secondario un cerchio di rune manda un fiume di energia dentro il portale; le lucciole salgono da uno schermo all'altro |
+| **Radar Tattico** | il radar | ogni contatto rilevato parte come pacchetto dal radar e arriva al registro sul secondario; con 3 schermi un satellite di sopra manda scansioni giù al radar |
 
-**3 schermi**
-![Ponte di Comando su 3 schermi](docs/img/ponte-di-comando-3s.jpg)
+**Come si attiva:**
+1. In Lively scegli la disposizione **Span**, cioè un solo sfondo esteso su tutti i monitor.
+2. Applica lo sfondo e in **Personalizza → Schermi** scegli la tua disposizione, oppure lascia **Automatico**: lo sfondo confronta l'area totale con la dimensione di un monitor e la riconosce da solo.
+
+> ℹ️ Con Span, Lively crea un'unica area grande quanto il rettangolo che contiene tutti i monitor. Nella disposizione a L l'angolo in alto a destra non ha nessuno schermo, quindi lì non c'è niente di importante. Gli sfondi danno per scontato che i monitor abbiano la stessa risoluzione e siano allineati.
+
+**2 schermi affiancati** (principale a destra)
+![Neon City su 2 schermi](docs/img/neon-city-2s.jpg)
+![Portale Arcano su 2 schermi](docs/img/portale-arcano-2s.jpg)
+
+**3 schermi a L** (principale in basso a sinistra, secondo a destra, terzo sopra)
 ![Portale Arcano su 3 schermi](docs/img/portale-arcano-3s.jpg)
+![Radar Tattico su 3 schermi](docs/img/radar-tattico-3s.jpg)
+![Neon City su 3 schermi](docs/img/neon-city-3s.jpg)
 
 > 💡 Preferisci uno sfondo diverso per ogni monitor? Usa in Lively la disposizione **Per schermo** e imposta **Schermi = 1 schermo** su ciascuno.
 

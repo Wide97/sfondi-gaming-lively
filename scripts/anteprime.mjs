@@ -7,7 +7,8 @@
 //   wallpapers/<nome>/thumbnail.jpg      miniatura per la libreria di Lively (640×360)
 //   docs/img/<nome>.jpg                  anteprima grande (1 schermo)
 //   docs/img/<nome>-p0..p3.jpg           le 4 palette
-//   docs/img/<nome>-2s.jpg / -3s.jpg     layout su 2 e 3 schermi
+//   docs/img/<nome>-2s.jpg               2 schermi affiancati (principale a destra)
+//   docs/img/<nome>-3s.jpg               3 schermi a L (principale + destra + sopra)
 //
 // Lo sfondo viene renderizzato in un canvas di dimensioni fisse, simulando qualche secondo
 // di animazione, poi il canvas viene esportato come JPEG.
@@ -51,6 +52,20 @@ function harness(wall, job) {
     const c = document.createElement('canvas'); c.width = ${job.ow}; c.height = ${job.oh};
     const x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
     x.drawImage(Kit.canvas, 0, 0, ${job.ow}, ${job.oh});
+    // l'angolo senza monitor (disposizione a L) viene mostrato vuoto, come appare davvero
+    const k = ${job.ow} / Kit.W;
+    for (const d of Kit.layout().dead) {
+      x.fillStyle = '#0d0d14'; x.fillRect(d.x * k, d.y * k, d.w * k, d.h * k);
+      x.strokeStyle = '#2c2c40'; x.setLineDash([8, 8]); x.lineWidth = 2;
+      x.strokeRect(d.x * k + 12, d.y * k + 12, d.w * k - 24, d.h * k - 24);
+      x.fillStyle = '#55557a'; x.font = '500 22px "Segoe UI", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText('nessuno schermo', (d.x + d.w / 2) * k, (d.y + d.h / 2) * k);
+    }
+    // cornici dei monitor, per far capire dove passa il confine tra gli schermi
+    if (Kit.screens > 1) {
+      x.setLineDash([]); x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 2;
+      for (const z of Kit.layout().zones) x.strokeRect(z.x * k + 1, z.y * k + 1, z.w * k - 2, z.h * k - 2);
+    }
     document.getElementById('out').textContent = 'DATA:' + c.toDataURL('image/jpeg', ${job.q}) + ':END';
   } catch (e) { document.getElementById('out').textContent = 'ERRORE:' + e.message + ':END'; }
 </script></body></html>`;
@@ -81,7 +96,7 @@ for (const w of walls) {
   jobs.push([w, { ...base, ow: 1920, oh: 1080, out: img(`${w}.jpg`), query: 'schermi=1' }]);
   for (let p = 0; p < 4; p++) jobs.push([w, { ...base, ow: 960, oh: 540, out: img(`${w}-p${p}.jpg`), query: `schermi=1&palette=${p}` }]);
   jobs.push([w, { ...base, w: 3840, ow: 1920, oh: 540, out: img(`${w}-2s.jpg`), query: 'schermi=2' }]);
-  jobs.push([w, { ...base, w: 5760, ow: 1920, oh: 360, out: img(`${w}-3s.jpg`), query: 'schermi=3' }]);
+  jobs.push([w, { ...base, w: 3840, h: 2160, ow: 1920, oh: 1080, out: img(`${w}-3s.jpg`), query: 'schermi=3' }]);
 }
 
 let next = 0, failed = 0;

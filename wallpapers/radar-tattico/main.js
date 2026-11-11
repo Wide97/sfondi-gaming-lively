@@ -1,4 +1,10 @@
-/* Radar Tattico — radar con fascio rotante, mappa topografica, mirino e interfaccia tattica. */
+/* Radar Tattico — radar con fascio rotante, mappa topografica, mirino e interfaccia tattica.
+ *
+ * Flusso tra gli schermi:
+ *  - il radar è sullo schermo principale; la mappa topografica continua su tutti gli schermi
+ *  - ogni contatto rilevato parte come pacchetto dati dal radar e arriva al registro sul secondario
+ *  - con 3 schermi un satellite sullo schermo di sopra manda scansioni giù al radar
+ */
 (function () {
   'use strict';
 
@@ -12,13 +18,14 @@
   const MONO = '"Cascadia Mono", Consolas, "Courier New", monospace';
   const SQUAD = ['ALFA', 'BRAVO', 'CHARLIE', 'DELTA'];
   const LOG = [
-    'CONTATTO {T} RILEVATO SETTORE {S}', 'SQUADRA {Q} IN POSIZIONE', 'SATELLITE: COPERTURA {P}%',
-    'CANALE CRITTOGRAFATO STABILITO', 'DRONE RICOGNIZIONE IN RIENTRO', 'PERIMETRO {S} SICURO',
-    'SQUADRA {Q} IN MOVIMENTO', 'INTERFERENZA RADIO SETTORE {S}', 'CONTATTO {T} PERSO',
-    'RICHIESTA SUPPORTO AEREO', 'PUNTO DI ESTRAZIONE CONFERMATO', 'SCANSIONE TERMICA COMPLETATA',
+    'SQUADRA {Q} IN POSIZIONE', 'SATELLITE: COPERTURA {P}%', 'CANALE CRITTOGRAFATO STABILITO',
+    'DRONE RICOGNIZIONE IN RIENTRO', 'PERIMETRO {S} SICURO', 'SQUADRA {Q} IN MOVIMENTO',
+    'INTERFERENZA RADIO SETTORE {S}', 'RICHIESTA SUPPORTO AEREO', 'PUNTO DI ESTRAZIONE CONFERMATO',
+    'SCANSIONE TERMICA COMPLETATA',
   ];
 
-  let staticLayer, scan, radar, contacts = [], logLines = [], nextLog = 0, glitchUntil = 0, nextGlitch = 4, lock = null;
+  let staticLayer, scan, radar, contacts = [], logLines = [], nextLog = 2, glitchUntil = 0, nextGlitch = 4, lock = null;
+  let panels, links = {}, packets = [], pulses = [], sat = null, nextSat = 3, lastContactPacket = 0;
 
   /* ---------- rumore per la mappa topografica ---------- */
   function noiseFn(seed) {
@@ -40,28 +47,32 @@
   const rgb = (hex) => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 
   function buildStatic(K) {
-    const P = K.pal, W = K.W, H = K.H;
+    const P = K.pal, W = K.W, H = K.H, lay = K.layout();
     staticLayer = K.offscreen(W, H);
     const s = staticLayer.x;
     s.fillStyle = P.bg; s.fillRect(0, 0, W, H);
 
-    // curve di livello calcolate a mezza risoluzione
+    // curve di livello a mezza risoluzione, continue su tutti gli schermi
     const sc = .5, w = Math.ceil(W * sc), h = Math.ceil(H * sc), fbm = noiseFn(99);
     const hgt = new Float32Array((w + 1) * (h + 1));
-    const freq = 1 / (H * .32 * sc);
-    for (let y = 0; y <= h; y++) for (let x = 0; x <= w; x++) hgt[y * (w + 1) + x] = fbm(x * freq + 5, y * freq + 9);
+    const freq = 1 / (lay.rowH * .32 * sc);
+    for (let y = 0; y <= h; y++) for (let x = 0; x <= w; x++) {
+      if (!K.visible(x / sc, y / sc) && !K.visible((x - 1) / sc, (y - 1) / sc)) continue;
+      hgt[y * (w + 1) + x] = fbm(x * freq + 5, y * freq + 9);
+    }
     const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
     const tc = tmp.getContext('2d'), id = tc.createImageData(w, h), d = id.data;
     const [mr, mg, mb] = rgb(P.map), [br, bg, bb] = rgb(P.bg), LV = 16;
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const p = (y * w + x) * 4;
+      d[p + 3] = 255;
+      if (!K.visible(x / sc, y / sc)) { d[p] = br; d[p + 1] = bg; d[p + 2] = bb; continue; }
       const i0 = y * (w + 1) + x, v = hgt[i0] * LV;
       const gx = (hgt[i0 + 1] - hgt[i0]) * LV, gy = (hgt[i0 + w + 1] - hgt[i0]) * LV;
       const g = Math.hypot(gx, gy) + 1e-4, f = v - Math.floor(v), dist = Math.min(f, 1 - f) / g;
       const major = Math.round(v) % 4 === 0;
-      const line = Math.max(0, 1 - dist / (major ? 1.1 : .7)) * (major ? .5 : .22);
-      const a = line + hgt[i0] * .07;
-      const p = (y * w + x) * 4;
-      d[p] = br + (mr - br) * a; d[p + 1] = bg + (mg - bg) * a; d[p + 2] = bb + (mb - bb) * a; d[p + 3] = 255;
+      const a = Math.max(0, 1 - dist / (major ? 1.1 : .7)) * (major ? .5 : .22) + hgt[i0] * .07;
+      d[p] = br + (mr - br) * a; d[p + 1] = bg + (mg - bg) * a; d[p + 2] = bb + (mb - bb) * a;
     }
     tc.putImageData(id, 0, 0);
     s.imageSmoothingEnabled = true;
@@ -69,62 +80,124 @@
 
     // griglia con coordinate, allineata a ogni schermo
     s.font = `500 11px ${MONO}`; s.textBaseline = 'top'; s.textAlign = 'left';
-    for (const z of K.zones()) {
+    let col = 0;
+    for (const z of lay.zones) {
       const gs = z.s / 9;
       s.strokeStyle = K.rgba(P.map, .08); s.lineWidth = 1;
       s.beginPath();
-      for (let x = z.x; x < z.x + z.w; x += gs) { s.moveTo(Math.round(x) + .5, 0); s.lineTo(Math.round(x) + .5, H); }
-      for (let y = 0; y < H; y += gs) { s.moveTo(z.x, Math.round(y) + .5); s.lineTo(z.x + z.w, Math.round(y) + .5); }
+      for (let x = z.x; x < z.x + z.w; x += gs) { s.moveTo(Math.round(x) + .5, z.y); s.lineTo(Math.round(x) + .5, z.y + z.h); }
+      for (let y = z.y; y < z.y + z.h; y += gs) { s.moveTo(z.x, Math.round(y) + .5); s.lineTo(z.x + z.w, Math.round(y) + .5); }
       s.stroke();
       s.fillStyle = K.rgba(P.map, .35);
       let c = 0;
-      for (let x = z.x; x < z.x + z.w - gs / 2; x += gs) s.fillText(String.fromCharCode(65 + (c++ % 26)), x + 4, 4);
+      for (let x = z.x; x < z.x + z.w - gs / 2; x += gs) s.fillText(String.fromCharCode(65 + ((col + c++) % 26)), x + 4, z.y + 4);
+      col += c;
       c = 1;
-      for (let y = gs; y < H - gs / 2; y += gs) s.fillText(String(c++), z.x + 4, y + 4);
+      for (let y = z.y + gs; y < z.y + z.h - gs / 2; y += gs) s.fillText(String(c++), z.x + 4, y + 4);
     }
 
-    // linee di scansione + vignettatura
     scan = K.offscreen(W, H);
     scan.x.fillStyle = 'rgba(0,0,0,.18)';
     for (let y = 0; y < H; y += 3) scan.x.fillRect(0, y, W, 1);
-    for (const z of K.zones()) {
+    for (const z of lay.zones) {
       const g = scan.x.createRadialGradient(z.cx, z.cy, z.s * .4, z.cx, z.cy, z.w * .75);
       g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.55)');
-      scan.x.fillStyle = g; scan.x.fillRect(z.x, 0, z.w, H);
+      scan.x.fillStyle = g; scan.x.fillRect(z.x, z.y, z.w, z.h);
     }
   }
 
+  /* ---------- disposizione pannelli e collegamenti ---------- */
+  function computePanels(K) {
+    const lay = K.layout(), m = lay.main, p = {};
+    if (lay.mode === 1) {
+      const pw = Math.min(m.w * .27, m.s * .52), x = m.x + m.w * .69, y = m.y + m.h * .08;
+      p.clock = { x, y, w: pw, h: pw * .5 };
+      p.squad = { x, y: y + pw * .55, w: pw, h: pw * .46 };
+      p.log = { x, y: y + pw * 1.07, w: pw, h: pw * .52 };
+    } else if (lay.mode === 2) {
+      const z = lay.left, pw = z.s * .62, y = z.y + z.h * .1;
+      p.clock = { x: z.x + z.w * .08, y, w: pw * 1.1, h: pw * .55 };
+      p.squad = { x: z.x + z.w * .08, y: y + pw * .62, w: pw, h: pw * .46 };
+      p.log = { x: z.x + z.w * .92 - pw, y: y + pw * .62, w: pw, h: pw * .52 };
+    } else {
+      const r = lay.right, t = lay.top, pw = r.s * .62;
+      p.squad = { x: r.x + r.w * .08, y: r.y + r.h * .12, w: pw, h: pw * .46 };
+      p.log = { x: r.x + r.w * .08, y: r.y + r.h * .12 + pw * .54, w: pw, h: pw * .52 };
+      p.clock = { x: t.x + t.w * .08, y: t.y + t.h * .14, w: pw * 1.1, h: pw * .55 };
+      sat = { x: t.x + t.w * .68, y: t.y + t.h * .4 };
+    }
+    return p;
+  }
+
+  // polilinea con gomiti ad angolo retto tra due punti
+  function makeLink(a, b, vertical) {
+    const pts = vertical
+      ? [a, { x: a.x, y: (a.y + b.y) / 2 }, { x: b.x, y: (a.y + b.y) / 2 }, b]
+      : [a, { x: (a.x + b.x) / 2, y: a.y }, { x: (a.x + b.x) / 2, y: b.y }, b];
+    const seg = [];
+    let len = 0;
+    for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); seg.push(l); len += l; }
+    return { pts, seg, len };
+  }
+
+  function pointOn(link, d) {
+    for (let i = 0; i < link.seg.length; i++) {
+      if (d <= link.seg[i] || i === link.seg.length - 1) {
+        const k = link.seg[i] ? Math.min(1, d / link.seg[i]) : 0, a = link.pts[i], b = link.pts[i + 1];
+        return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k };
+      }
+      d -= link.seg[i];
+    }
+    return link.pts[link.pts.length - 1];
+  }
+
+  function computeLinks() {
+    const L = panels.log, toLeft = L.x + L.w / 2 < radar.x;
+    const edgeX = toLeft ? L.x + L.w : L.x;
+    const a = { x: radar.x + (toLeft ? -1 : 1) * (radar.R + 46), y: radar.y };
+    links = { log: makeLink(a, { x: edgeX, y: L.y + L.h * .5 }, false) };
+    if (sat) links.sat = makeLink({ x: sat.x, y: sat.y + 26 }, { x: radar.x, y: radar.y - radar.R - 46 }, true);
+  }
+
+  function sendPacket(link, color, onArrive) { packets.push({ link, d: 0, color, onArrive }); }
+
+  /* ---------- contatti e registro ---------- */
   function newContact(rnd = Math.random) {
     const a = rnd() * 6.283, r = .15 + rnd() * .8;
     return { x: Math.cos(a) * r, y: Math.sin(a) * r, vx: (rnd() - .5) * .02, vy: (rnd() - .5) * .02,
       lit: 0, hostile: rnd() < .35, id: 'T-' + String(((rnd() * 90) | 0) + 10) };
   }
 
-  function addLog(K, secondsAgo = 0) {
-    const ck = K.clock(new Date(Date.now() - secondsAgo * 1000)), pick = (a) => a[(Math.random() * a.length) | 0];
-    const sector = String.fromCharCode(65 + ((Math.random() * 9) | 0)) + ((Math.random() * 9 + 1) | 0);
-    let tpl = pick(LOG);
-    while (logLines.length && logLines[logLines.length - 1].includes(tpl.split(' {')[0].split(':')[0])) tpl = pick(LOG);
-    const msg = tpl.replace('{T}', pick(contacts).id).replace('{S}', sector)
-      .replace('{Q}', pick(SQUAD)).replace('{P}', String(90 + ((Math.random() * 10) | 0)));
+  const sector = () => String.fromCharCode(65 + ((Math.random() * 9) | 0)) + ((Math.random() * 9 + 1) | 0);
+
+  function pushLog(K, msg, secondsAgo = 0) {
+    const ck = K.clock(new Date(Date.now() - secondsAgo * 1000));
     logLines.push(`[${ck.time}:${ck.ss}] ${msg}`);
     if (logLines.length > 9) logLines.shift();
+  }
+
+  function randomMsg() {
+    const pick = (a) => a[(Math.random() * a.length) | 0];
+    let tpl = pick(LOG);
+    while (logLines.length && logLines[logLines.length - 1].includes(tpl.split(' {')[0].split(':')[0])) tpl = pick(LOG);
+    return tpl.replace('{S}', sector()).replace('{Q}', pick(SQUAD)).replace('{P}', String(90 + ((Math.random() * 10) | 0)));
   }
 
   function build(ctx, K) {
     buildStatic(K);
     const lay = K.layout(), m = lay.main, rnd = K.seeded(5);
-    radar = K.screens === 1
-      ? { x: m.x + m.w * .38, y: K.H * .5, R: m.s * .38 }
-      : { x: m.cx, y: K.H * .5, R: m.s * .4 };
+    radar = lay.mode === 1 ? { x: m.x + m.w * .38, y: m.cy, R: m.s * .38 } : { x: m.cx, y: m.cy, R: m.s * .4 };
+    sat = null;
+    panels = computePanels(K);
+    computeLinks();
     contacts = Array.from({ length: 8 }, () => newContact(rnd));
-    if (!logLines.length) for (let i = 6; i > 0; i--) addLog(K, i * 9 + ((Math.random() * 6) | 0));
-    lock = null;
+    if (!logLines.length) for (let i = 6; i > 0; i--) pushLog(K, randomMsg(), i * 9 + ((Math.random() * 6) | 0));
+    packets = []; pulses = []; lock = null;
   }
 
   /* ---------- elementi dell'interfaccia ---------- */
-  function frame(ctx, K, x, y, w, h, title) {
-    const P = K.pal, cut = 14;
+  function frame(ctx, K, r, title) {
+    const P = K.pal, cut = 14, { x, y, w, h } = r;
     ctx.fillStyle = K.rgba(P.bg, .72);
     ctx.beginPath();
     ctx.moveTo(x + cut, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + h - cut);
@@ -137,9 +210,9 @@
     ctx.fillText(title, x + cut + 8, y + 9.5);
   }
 
-  function clockPanel(ctx, K, x, y, w) {
-    const P = K.pal, h = w * .5, ck = K.clock();
-    frame(ctx, K, x, y, w, h, 'TIMER MISSIONE');
+  function clockPanel(ctx, K, r) {
+    const P = K.pal, { x, y, w, h } = r, ck = K.clock();
+    frame(ctx, K, r, 'TIMER MISSIONE');
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = P.text; ctx.shadowColor = P.hud; ctx.shadowBlur = 10;
     ctx.font = `600 ${w * .17}px ${MONO}`;
@@ -154,9 +227,9 @@
     ctx.fillText(`OP. TEMPESTA SILENZIOSA · ${ck.short}`, x + 16, y + h * .9);
   }
 
-  function squadPanel(ctx, K, x, y, w) {
-    const P = K.pal, h = w * .46;
-    frame(ctx, K, x, y, w, h, 'STATO SQUADRA');
+  function squadPanel(ctx, K, r) {
+    const P = K.pal, { x, y, w, h } = r;
+    frame(ctx, K, r, 'STATO SQUADRA');
     const fs = Math.max(11, w * .038);
     ctx.font = `500 ${fs}px ${MONO}`; ctx.textBaseline = 'middle';
     SQUAD.forEach((name, i) => {
@@ -171,9 +244,9 @@
     });
   }
 
-  function logPanel(ctx, K, x, y, w) {
-    const P = K.pal, h = w * .52;
-    frame(ctx, K, x, y, w, h, 'REGISTRO OPERAZIONI');
+  function logPanel(ctx, K, r) {
+    const P = K.pal, { x, y, w, h } = r;
+    frame(ctx, K, r, 'REGISTRO OPERAZIONI');
     const fs = Math.max(10, w * .028);
     ctx.font = `500 ${fs}px ${MONO}`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     ctx.save(); ctx.beginPath(); ctx.rect(x + 4, y + 24, w - 8, h - 30); ctx.clip();
@@ -185,10 +258,56 @@
     ctx.restore();
   }
 
+  function satellite(ctx, K) {
+    const P = K.pal, x = sat.x + Math.sin(K.t * .2) * 30, y = sat.y + Math.sin(K.t * .3) * 8;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(K.t * .15) * .08);
+    ctx.strokeStyle = P.hud; ctx.lineWidth = 1.5;
+    for (const sx of [-1, 1]) {
+      ctx.fillStyle = K.rgba(P.hud, .18); ctx.fillRect(sx > 0 ? 18 : -62, -9, 44, 18);
+      ctx.strokeRect(sx > 0 ? 18 : -62, -9, 44, 18);
+      ctx.beginPath();
+      for (let i = 1; i < 4; i++) { const gx = (sx > 0 ? 18 : -62) + i * 11; ctx.moveTo(gx, -9); ctx.lineTo(gx, 9); }
+      ctx.moveTo(sx * 12, 0); ctx.lineTo(sx * 18, 0); ctx.stroke();
+    }
+    ctx.fillStyle = K.rgba(P.bg, .9); ctx.fillRect(-12, -12, 24, 24); ctx.strokeRect(-12, -12, 24, 24);
+    ctx.beginPath(); ctx.arc(0, 18, 9, Math.PI, 0); ctx.stroke();
+    ctx.fillStyle = Math.sin(K.real * 4) > 0 ? P.alert : K.rgba(P.alert, .2); ctx.fillRect(-3, -3, 6, 6);
+    ctx.restore();
+    ctx.fillStyle = K.rgba(P.text, .8); ctx.font = `600 12px ${MONO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('SAT-3 · UPLINK ATTIVO', x, y - 44);
+  }
+
+  function drawLinks(ctx, K) {
+    const P = K.pal;
+    ctx.lineWidth = 1.6; ctx.setLineDash([6, 6]);
+    for (const k in links) {
+      const l = links[k];
+      ctx.strokeStyle = K.rgba(P.hud, .7); ctx.lineDashOffset = -K.t * 30;
+      ctx.beginPath(); l.pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    for (const k in links) for (const p of [links[k].pts[0], links[k].pts[links[k].pts.length - 1]]) {
+      ctx.fillStyle = P.hud; ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+    }
+    // pacchetti dati in viaggio
+    for (let i = packets.length - 1; i >= 0; i--) {
+      const pk = packets[i];
+      pk.d += K._frameDt * Math.max(260, pk.link.len / 1.6) * (.6 + K.speed * .4);
+      if (pk.d >= pk.link.len) { packets.splice(i, 1); pk.onArrive && pk.onArrive(); continue; }
+      const p = pointOn(pk.link, pk.d), q = pointOn(pk.link, Math.max(0, pk.d - 40));
+      const g = ctx.createLinearGradient(q.x, q.y, p.x, p.y);
+      g.addColorStop(0, K.rgba(pk.color, 0)); g.addColorStop(1, K.rgba(pk.color, .9));
+      ctx.strokeStyle = g; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(q.x, q.y);
+      for (let d = Math.max(0, pk.d - 40) + 5; d < pk.d; d += 5) { const r = pointOn(pk.link, d); ctx.lineTo(r.x, r.y); }
+      ctx.lineTo(p.x, p.y); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+    }
+  }
+
   function drawRadar(ctx, K) {
     const P = K.pal, { x, y, R } = radar;
     ctx.fillStyle = K.rgba(P.bg, .55); ctx.beginPath(); ctx.arc(x, y, R, 0, 6.283); ctx.fill();
-
     ctx.strokeStyle = K.rgba(P.hud, .3); ctx.lineWidth = 1;
     for (let i = 1; i <= 4; i++) { ctx.beginPath(); ctx.arc(x, y, R * i / 4, 0, 6.283); ctx.stroke(); }
     ctx.beginPath(); ctx.moveTo(x - R, y); ctx.lineTo(x + R, y); ctx.moveTo(x, y - R); ctx.lineTo(x, y + R); ctx.stroke();
@@ -203,7 +322,14 @@
       if (i % 6 === 0) ctx.fillText(String(i * 5).padStart(3, '0'), x + Math.cos(a) * (R + 24), y + Math.sin(a) * (R + 24));
     }
 
-    // fascio rotante
+    // impulsi della scansione satellitare
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      const p = pulses[i]; p.k += K._frameDt / 1.6;
+      if (p.k >= 1) { pulses.splice(i, 1); continue; }
+      ctx.strokeStyle = K.rgba(P.text, (1 - p.k) * .7); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, R * p.k, 0, 6.283); ctx.stroke();
+    }
+
     const prev = (K.t - K.dt) * 1.1, th = K.t * 1.1, trail = 1.1;
     const g = ctx.createConicGradient(th - trail, x, y);
     g.addColorStop(0, K.rgba(P.hud, 0)); g.addColorStop(trail / 6.283, K.rgba(P.hud, .32));
@@ -213,14 +339,21 @@
     ctx.strokeStyle = K.rgba(P.text, .9); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(th) * R, y + Math.sin(th) * R); ctx.stroke();
 
-    // contatti: si illuminano quando il fascio li attraversa
     const norm = (a) => ((a % 6.283) + 6.283) % 6.283;
     for (let i = 0; i < contacts.length; i++) {
       const c = contacts[i];
       c.x += c.vx * K.dt; c.y += c.vy * K.dt;
       if (Math.hypot(c.x, c.y) > .95) { contacts[i] = newContact(); continue; }
-      const a = norm(Math.atan2(c.y, c.x)), d0 = norm(a - prev), span = th - prev;
-      if (d0 <= span + 1e-6) c.lit = 1;
+      const a = norm(Math.atan2(c.y, c.x)), d0 = norm(a - prev);
+      if (d0 <= th - prev + 1e-6) {
+        // nuovo rilevamento: il dato parte verso il registro sull'altro schermo
+        if (c.lit < .3 && K.real - lastContactPacket > 1.2 && Math.random() < .6) {
+          lastContactPacket = K.real;
+          const msg = `CONTATTO ${c.id} ${c.hostile ? 'OSTILE' : 'NEUTRALE'} SETTORE ${sector()}`;
+          sendPacket(links.log, c.hostile ? P.alert : P.hud, () => pushLog(K, msg));
+        }
+        c.lit = 1;
+      }
       c.lit = Math.max(0, c.lit - K._frameDt * .35);
       if (c.lit <= 0) continue;
       const cx = x + c.x * R, cy = y + c.y * R, col = c.hostile ? P.alert : P.hud;
@@ -240,16 +373,13 @@
   function crosshair(ctx, K) {
     const P = K.pal, m = K.mouse;
     if (!K.props.mouse || !m.inside) { lock = null; return; }
-    // cerca un contatto visibile vicino al cursore
     let best = null, bd = 50;
     for (const c of contacts) {
       if (c.lit < .15) continue;
       const d = Math.hypot(radar.x + c.x * radar.R - m.x, radar.y + c.y * radar.R - m.y);
       if (d < bd) { bd = d; best = c; }
     }
-    if (best) { if (!lock || lock.c !== best) lock = { c: best, t: 0 }; lock.t += K._frameDt; }
-    else lock = null;
-
+    if (best) { if (!lock || lock.c !== best) lock = { c: best, t: 0 }; lock.t += K._frameDt; } else lock = null;
     ctx.strokeStyle = K.rgba(P.text, .85); ctx.lineWidth = 1.5;
     const g = 6, l = 16;
     ctx.beginPath();
@@ -259,7 +389,6 @@
     ctx.beginPath(); ctx.arc(m.x, m.y, 26, 0, 6.283); ctx.strokeStyle = K.rgba(P.text, .35); ctx.stroke();
     ctx.font = `500 11px ${MONO}`; ctx.fillStyle = K.rgba(P.text, .7); ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     ctx.fillText(`X ${Math.round(m.x).toString().padStart(4, '0')}  Y ${Math.round(m.y).toString().padStart(4, '0')}`, m.x + 30, m.y + 18);
-
     if (lock) {
       const c = lock.c, cx = radar.x + c.x * radar.R, cy = radar.y + c.y * radar.R;
       const k = Math.min(1, lock.t / .5), s = K.lerp(60, 22, k);
@@ -281,45 +410,42 @@
 
   /* ---------- disegno ---------- */
   function draw(ctx, K) {
-    const W = K.W, H = K.H, lay = K.layout();
+    const W = K.W, H = K.H, P = K.pal;
     ctx.drawImage(staticLayer.c, 0, 0, W, H);
-    drawRadar(ctx, K);
 
-    if (K.t > nextLog) { addLog(K); nextLog = K.t + 2 + Math.random() * 3; }
-
-    if (K.screens === 1) {
-      const m = lay.main, pw = Math.min(m.w * .27, m.s * .52), px = m.x + m.w * .69;
-      if (K.props.orologio) clockPanel(ctx, K, px, H * .08, pw);
-      squadPanel(ctx, K, px, H * .08 + pw * .55, pw);
-      logPanel(ctx, K, px, H * .08 + pw * 1.07, pw);
-    } else if (K.screens === 2) {
-      const z = lay.info, pw = z.s * .62;
-      if (K.props.orologio) clockPanel(ctx, K, z.x + z.w * .08, H * .1, pw * 1.1);
-      squadPanel(ctx, K, z.x + z.w * .08, H * .1 + pw * .62, pw);
-      logPanel(ctx, K, z.x + z.w * .92 - pw, H * .1 + pw * .62, pw);
-    } else {
-      const [l, r] = lay.side, pw = l.s * .62;
-      squadPanel(ctx, K, l.cx - pw / 2, H * .12, pw);
-      logPanel(ctx, K, l.cx - pw / 2, H * .12 + pw * .54, pw);
-      if (K.props.orologio) clockPanel(ctx, K, r.cx - pw * .55, H * .3, pw * 1.1);
+    // messaggi periodici: anche loro arrivano al registro come pacchetti dal radar
+    if (K.t > nextLog) { const msg = randomMsg(); sendPacket(links.log, P.hud, () => pushLog(K, msg)); nextLog = K.t + 3 + Math.random() * 4; }
+    // scansione satellitare (3 schermi): dal satellite in alto giù fino al radar
+    if (sat && K.t > nextSat) {
+      nextSat = K.t + 7 + Math.random() * 5;
+      sendPacket(links.sat, P.text, () => {
+        pulses.push({ k: 0 });
+        for (const c of contacts) c.lit = Math.max(c.lit, .8);
+        sendPacket(links.log, P.hud, () => pushLog(K, `SCANSIONE SATELLITARE RICEVUTA · ${contacts.length} CONTATTI`));
+      });
     }
+
+    drawLinks(ctx, K);
+    drawRadar(ctx, K);
+    if (sat) satellite(ctx, K);
+    if (K.props.orologio) clockPanel(ctx, K, panels.clock);
+    squadPanel(ctx, K, panels.squad);
+    logPanel(ctx, K, panels.log);
 
     crosshair(ctx, K);
     ctx.drawImage(scan.c, 0, 0, W, H);
 
-    // glitch digitale occasionale
     if (K.props.glitch) {
       if (K.real > nextGlitch) { glitchUntil = K.real + .12 + Math.random() * .15; nextGlitch = K.real + 5 + Math.random() * 9; }
       if (K.real < glitchUntil) {
-        const c = K.canvas, dpr = K.dpr;
+        const c = K.canvas;
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
         for (let i = 0; i < 5; i++) {
-          const y = Math.random() * c.height, h = (4 + Math.random() * 30) * dpr, dx = (Math.random() - .5) * 40 * dpr;
+          const y = Math.random() * c.height, h = (4 + Math.random() * 30) * K.dpr, dx = (Math.random() - .5) * 40 * K.dpr;
           ctx.drawImage(c, 0, y, c.width, h, dx, y, c.width, h);
         }
         ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = K.rgba(K.pal.alert, .06);
-        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.fillStyle = K.rgba(K.pal.alert, .06); ctx.fillRect(0, 0, c.width, c.height);
         ctx.restore();
       }
     }
