@@ -2,7 +2,7 @@
 
 Sfondi **animati** a tema gaming per il desktop di **Windows**, da usare con [Lively Wallpaper](https://www.rocksdanister.com/lively/) (gratuito e open source).
 
-- 5 sfondi: **cyberpunk, sci-fi, fantasy, tattico** e una **notte rossonera in curva**
+- 7 sfondi: **cyberpunk, sci-fi, fantasy, tattico**, una **notte rossonera in curva** e due sfondi **soft con informazioni utili** (meteo, calendario, PC, musica)
 - Funzionano su **1 schermo, 2 affiancati o 3 a L**: la scena scorre da un monitor all'altro verso quello principale
 - **4 palette** (Neon, Notturno, Pastello, Mono) e **3 velocità** (Lento, Medio, Dinamico)
 - **3 intensità** (Calmo, Equilibrato, Vivace): con **Calmo**, il predefinito, le icone del desktop restano leggibili
@@ -23,9 +23,13 @@ Sfondi **animati** a tema gaming per il desktop di **Windows**, da usare con [Li
 | <img src="docs/img/ponte-di-comando.jpg" width="260"> | **Ponte di Comando**<br>_Sci-fi_ | Vista dalla plancia di un'astronave: gigante gassoso con anelli, luna in orbita, nebulosa, HUD olografico | 🖱️ parallasse · 🕒 orologio di bordo · 🛸 cornice |
 | <img src="docs/img/portale-arcano.jpg" width="260"> | **Portale Arcano**<br>_Fantasy / RPG_ | Cerchi di rune rotanti, vortice di energia, cristalli sospesi, lucciole | 🖱️ scintille · 🎵 musica · 🕒 orologio |
 | <img src="docs/img/radar-tattico.jpg" width="260"> | **Radar Tattico**<br>_FPS / Tattico_ | Radar con fascio rotante su mappa topografica, stato squadra, registro operazioni | 🖱️ mirino che aggancia i bersagli · 🕒 timer missione · ⚡ glitch |
-| <img src="docs/img/rossoneri.jpg" width="260"> | **Rossoneri**<br>_Calcio · Curva Sud_ | Notte di stadio: coreografia rossonera con sette stelle, bandiere, fumogeni, la ola, fuochi d'artificio. Palette: Rossonero, Notte di Coppa, Trasferta, Oro | ✍️ scritta personalizzabile · 🖱️ fuochi al clic · 🎵 musica · 🕒 tabellone |
+| <img src="docs/img/rossoneri.jpg" width="260"> | **Rossoneri**<br>_Calcio · Curva Sud_ | Notte di stadio: coreografia rossonera con sette stelle, bandiere, fumogeni, la ola, fuochi d'artificio. Palette: Rossonero, Notte di Coppa, Trasferta, Oro | ✍️ scritta personalizzabile · 🛡️ immagine tua al centro · 🖱️ fuochi al clic · 🎵 musica · 🕒 tabellone |
+| <img src="docs/img/orizzonte.jpg" width="260"> | **Orizzonte**<br>_Soft · Meteo_ | Colline morbide sotto un cielo che segue l'ora vera (alba, giorno, tramonto, notte) e il meteo della tua città: nuvole, pioggia e neve quando ci sono davvero. Palette: Colline, Lago, Dune, Grafite | 🌦️ meteo attuale, prossime ore e giorni · 🌅 alba e tramonto · 🕒 orologio |
+| <img src="docs/img/bruma.jpg" width="260"> | **Bruma**<br>_Soft · Cruscotto_ | Nebbie di colore che si muovono piano, con un cruscotto discreto. Palette: Lavanda, Salvia, Notte, Sabbia | 📅 calendario con festività · 💻 CPU, GPU, RAM, rete · 🎵 brano in riproduzione · 🌦️ meteo |
 
-> **Rossoneri** è uno sfondo **non ufficiale** fatto da tifosi: non è affiliato né approvato dal club e non usa stemmi, loghi o marchi ufficiali. Ci sono solo i colori, la scritta della coreografia (modificabile) e l'atmosfera da stadio.
+> **Rossoneri** è uno sfondo **non ufficiale** fatto da tifosi: non è affiliato né approvato dal club e il pacchetto non contiene stemmi, loghi o marchi ufficiali. Ci sono solo i colori, la scritta della coreografia (modificabile) e l'atmosfera da stadio.
+>
+> **Immagine al centro della coreografia**: metti un'immagine tua (PNG trasparente ideale) nella cartella `stemma` dello sfondo, che trovi in Lively con tasto destro → *Apri cartella*, poi sceglila in *Personalizza → Stemma*. Resta solo sul tuo PC: non è nel repo né negli zip.
 
 ### Le 4 palette
 
@@ -99,6 +103,14 @@ Gli schermi non sono indipendenti: la scena è **una sola** e scorre da un monit
 
 > 💡 Preferisci uno sfondo diverso per ogni monitor? Usa in Lively la disposizione **Per schermo** e imposta **Schermi = 1 schermo** su ciascuno.
 
+## Informazioni utili (Orizzonte e Bruma)
+
+- **Meteo**: scrivi la tua città in *Personalizza → Città*. I dati arrivano da [Open-Meteo](https://open-meteo.com/) (gratis, senza account né chiave): lo sfondo invia solo il nome della città e le sue coordinate, si aggiorna ogni 30 minuti e ricorda l'ultimo dato se sei offline. In Bruma, lasciando la città vuota il meteo non compare.
+- **Cielo reale** (Orizzonte): alba e tramonto sono quelli veri della tua città; senza meteo usa 07:00 e 17:30.
+- **Calendario** (Bruma): mese corrente, numero della settimana, festività nazionali italiane (Pasqua e Pasquetta comprese) e quanto manca alla prossima.
+- **PC e musica** (Bruma): CPU, GPU, RAM e rete, e il brano che stai ascoltando (Spotify, browser e qualunque player che compare nei controlli multimediali di Windows). Li fornisce Lively, il pacchetto li attiva da solo. Nel browser non sono disponibili, e i pannelli che non hanno dati non compaiono.
+- **Dove vanno i pannelli**: con 2 o 3 schermi stanno sui secondari, così sul principale restano solo le icone. Con 1 schermo stanno in una colonna a destra.
+
 ## Mouse e musica
 
 - **Mouse**: Ponte di Comando, Portale Arcano e Radar Tattico reagiscono al cursore. Controlla che nelle impostazioni di Lively l'input del mouse sullo sfondo sia attivo.
@@ -123,7 +135,8 @@ sfondi-gaming-lively/
 │  ├─ LivelyInfo.json         titolo, descrizione, tipo (1 = web, 2 = web con audio)
 │  ├─ LivelyProperties.json   le opzioni di "Personalizza"
 │  └─ thumbnail.jpg
-├─ shared/kit.js              base comune: proprietà, palette, velocità, multi-schermo, audio, mouse
+├─ shared/kit.js              base comune: proprietà, palette, velocità, intensità, multi-schermo, audio, mouse
+├─ shared/info.js             meteo, calendario, dati di sistema e musica, widget dei pannelli (Orizzonte, Bruma)
 ├─ docs/                      galleria GitHub Pages (legge catalog.json) + immagini
 ├─ scripts/
 │  ├─ anteprime.mjs           rigenera le anteprime con Edge headless

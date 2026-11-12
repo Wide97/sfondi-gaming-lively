@@ -42,17 +42,41 @@ const walls = [
     desc: 'Radar con fascio rotante, mappa topografica, registro operazioni e mirino che aggancia i bersagli.',
     props: { orologio: cb('Timer missione (orologio)'), mouse: cb('Mirino sul mouse'), glitch: cb('Glitch digitali') } },
   { dir: 'rossoneri', title: 'Rossoneri', tag: 'Calcio · Curva Sud', type: 2,
-    about: "Notte di stadio in curva: coreografia rossonera con sette stelle, bandiere al vento, fumogeni, la ola che arriva dagli altri schermi e fuochi d'artificio. La scritta della coreografia si può cambiare. Sfondo non ufficiale fatto da tifosi, senza loghi del club.",
+    about: "Notte di stadio in curva: coreografia rossonera con sette stelle, bandiere al vento, fumogeni, la ola che arriva dagli altri schermi e fuochi d'artificio. La scritta della coreografia si può cambiare e puoi aggiungere un'immagine tua al centro. Sfondo non ufficiale fatto da tifosi: nessun logo del club è incluso.",
+    extraDirs: ['stemma'],
     palItems: ['Rossonero', 'Notte di Coppa', 'Trasferta', 'Oro'],
     desc: 'Notte di stadio in Curva Sud: coreografia rossonera, bandiere, fumogeni, ola e fuochi d\'artificio. Sfondo non ufficiale fatto da tifosi, non affiliato al club.',
     props: {
       scritta: { type: 'textbox', value: 'FORZA MILAN', text: 'Scritta della coreografia' },
+      // elenca le immagini messe dall'utente in stemma/ sul proprio PC (nessuna è inclusa nel pacchetto)
+      stemma: { type: 'folderDropdown', value: '', text: 'Stemma (immagine tua nella cartella stemma)', filter: '*.png|*.jpg|*.jpeg|*.webp|*.svg', folder: 'stemma' },
       orologio: cb('Orologio sul tabellone'), fumogeni: cb('Fumogeni'),
       mouse: cb("Fuochi d'artificio al clic"), audio: cb('Reagisci alla musica'),
     } },
+
+  // --- sfondi "soft" con informazioni utili (usano shared/info.js) ---
+  { dir: 'orizzonte', title: 'Orizzonte', tag: 'Soft · Meteo', type: 1, libs: ['info'], info: true,
+    palItems: ['Colline', 'Lago', 'Dune', 'Grafite'],
+    about: "Colline morbide sotto un cielo che segue l'ora vera: alba, giorno, tramonto e notte arrivano quando arrivano fuori dalla finestra, e nuvole, pioggia o neve seguono il meteo della tua città. Con orologio, meteo attuale, prossime ore e prossimi giorni, orari di alba e tramonto.",
+    desc: "Colline e cielo che seguono l'ora e il meteo reali. Orologio, meteo attuale, prossime ore e prossimi giorni.",
+    props: {
+      citta: { type: 'textbox', value: 'Milano', text: 'Città per il meteo' },
+      orologio: cb('Orologio'), pannelli: cb('Pannelli meteo'), cielo: cb("Cielo che segue l'ora e il meteo reali"),
+    } },
+  { dir: 'bruma', title: 'Bruma', tag: 'Soft · Cruscotto', type: 2, libs: ['info'], info: true,
+    args: '--system-information --system-nowplaying',
+    palItems: ['Lavanda', 'Salvia', 'Notte', 'Sabbia'],
+    about: 'Nebbie di colore che si muovono piano, con un cruscotto discreto: orologio, calendario del mese con festività e settimana, uso di CPU, GPU, RAM e rete, il brano in riproduzione e, se vuoi, il meteo.',
+    desc: 'Nebbie di colore lente con orologio, calendario, uso di CPU/GPU/RAM, brano in riproduzione e meteo.',
+    props: {
+      citta: { type: 'textbox', value: '', text: 'Città per il meteo (vuoto = niente meteo)' },
+      orologio: cb('Orologio'), calendario: cb('Calendario'), sistema: cb('CPU, GPU, RAM e rete'),
+      musica: cb('Brano in riproduzione'), audio: cb('Respira con la musica'),
+    } },
 ];
 
-const html = (title) => `<!doctype html>
+// libs: file di shared/ oltre a kit.js (es. ['info'] → info.js), caricati in ordine prima di main.js
+const html = (title, libs = []) => `<!doctype html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -62,11 +86,16 @@ const html = (title) => `<!doctype html>
 </head>
 <body>
 <script>
-  // Carica kit.js (nel pacchetto) oppure ../../shared/kit.js (nel repo), poi lo sfondo.
+  // Carica le librerie comuni (accanto a index.html nel pacchetto, in ../../shared/ nel repo), poi lo sfondo.
   (function () {
+    var libs = ${JSON.stringify(['kit', ...libs])};
     function load(src, ok, ko) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.body.appendChild(s); }
-    function main() { load('main.js'); }
-    load('kit.js', main, function () { load('../../shared/kit.js', main); });
+    function next(i) {
+      if (i === libs.length) return load('main.js');
+      var f = libs[i] + '.js';
+      load(f, function () { next(i + 1); }, function () { load('../../shared/' + f, function () { next(i + 1); }); });
+    }
+    next(0);
   })();
 </script>
 </body>
@@ -76,11 +105,11 @@ const html = (title) => `<!doctype html>
 for (const w of walls) {
   const d = path.join(root, 'wallpapers', w.dir);
   fs.mkdirSync(d, { recursive: true });
-  fs.writeFileSync(path.join(d, 'index.html'), html(w.title));
+  fs.writeFileSync(path.join(d, 'index.html'), html(w.title, w.libs));
   const info = {
     AppVersion: '2.0.0.0', Title: w.title, Thumbnail: 'thumbnail.jpg', Preview: 'thumbnail.jpg',
     Desc: w.desc, Author: owner, License: 'MIT', Contact: `https://github.com/${owner}/${repo}`,
-    Type: w.type, FileName: 'index.html', Arguments: null, IsAbsolutePath: false,
+    Type: w.type, FileName: 'index.html', Arguments: w.args || null, IsAbsolutePath: false,
   };
   fs.writeFileSync(path.join(d, 'LivelyInfo.json'), JSON.stringify(info, null, 2) + '\n');
   const props = { ...common, ...w.props, ...fps };
@@ -90,7 +119,8 @@ for (const w of walls) {
 // catalogo per la galleria: le opzioni specifiche di ogni sfondo diventano le "etichette" degli extra
 fs.writeFileSync(path.join(root, 'docs', 'catalog.json'), JSON.stringify(walls.map((w) => ({
   dir: w.dir, title: w.title, tag: w.tag, desc: w.about,
-  palettes: w.palItems || common.palette.items,
+  palettes: w.palItems || common.palette.items, info: !!w.info,
+  libs: ['kit', ...(w.libs || [])], extraDirs: w.extraDirs || [],
   extras: Object.values(w.props).map((p) => p.text),
 })), null, 2) + '\n');
 

@@ -30,8 +30,11 @@ const walls = fs.readdirSync(path.join(ROOT, 'wallpapers'), { withFileTypes: tru
 
 fs.mkdirSync(path.join(ROOT, 'docs', 'img'), { recursive: true });
 
+// librerie di ogni sfondo (kit.js + eventuali altre di shared/), da docs/catalog.json
+const LIBS = Object.fromEntries(JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'catalog.json'), 'utf8')).map((w) => [w.dir, w.libs]));
+
 function harness(wall, job) {
-  const kit = pathToFileURL(path.join(ROOT, 'shared', 'kit.js')).href;
+  const libs = (LIBS[wall] || ['kit']).map((l) => `<script src="${pathToFileURL(path.join(ROOT, 'shared', l + '.js')).href}"></script>`).join('\n');
   const main = pathToFileURL(path.join(ROOT, 'wallpapers', wall, 'main.js')).href;
   return `<!doctype html><html><head><meta charset="utf-8"></head><body><pre id="out"></pre>
 <script>
@@ -40,7 +43,7 @@ function harness(wall, job) {
   Object.defineProperty(window, 'devicePixelRatio', { get: () => 1 });
   (function () { let s = 12345; Math.random = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646; })();
 </script>
-<script src="${kit}"></script>
+${libs}
 <script src="${main}"></script>
 <script>
   try {
@@ -94,11 +97,11 @@ const jobs = [];
 for (const w of walls) {
   const img = (n) => path.join(ROOT, 'docs', 'img', n);
   const base = { w: 1920, h: 1080, frames: 180, q: .86 };
-  jobs.push([w, { ...base, ow: 640, oh: 360, q: .85, out: path.join(ROOT, 'wallpapers', w, 'thumbnail.jpg'), query: 'schermi=1' }]);
-  jobs.push([w, { ...base, ow: 1920, oh: 1080, out: img(`${w}.jpg`), query: 'schermi=1' }]);
-  for (let p = 0; p < 4; p++) jobs.push([w, { ...base, ow: 960, oh: 540, out: img(`${w}-p${p}.jpg`), query: `schermi=1&palette=${p}` }]);
-  jobs.push([w, { ...base, w: 3840, ow: 1920, oh: 540, out: img(`${w}-2s.jpg`), query: 'schermi=2' }]);
-  jobs.push([w, { ...base, w: 3840, h: 2160, ow: 1920, oh: 1080, out: img(`${w}-3s.jpg`), query: 'schermi=3' }]);
+  jobs.push([w, { ...base, ow: 640, oh: 360, q: .85, out: path.join(ROOT, 'wallpapers', w, 'thumbnail.jpg'), query: 'demo=1&schermi=1' }]);
+  jobs.push([w, { ...base, ow: 1920, oh: 1080, out: img(`${w}.jpg`), query: 'demo=1&schermi=1' }]);
+  for (let p = 0; p < 4; p++) jobs.push([w, { ...base, ow: 960, oh: 540, out: img(`${w}-p${p}.jpg`), query: `demo=1&schermi=1&palette=${p}` }]);
+  jobs.push([w, { ...base, w: 3840, ow: 1920, oh: 540, out: img(`${w}-2s.jpg`), query: 'demo=1&schermi=2' }]);
+  jobs.push([w, { ...base, w: 3840, h: 2160, ow: 1920, oh: 1080, out: img(`${w}-3s.jpg`), query: 'demo=1&schermi=3' }]);
 }
 
 let next = 0, failed = 0;

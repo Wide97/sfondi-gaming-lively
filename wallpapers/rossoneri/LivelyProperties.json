@@ -46,6 +46,13 @@
     "value": "FORZA MILAN",
     "text": "Scritta della coreografia"
   },
+  "stemma": {
+    "type": "folderDropdown",
+    "value": "",
+    "text": "Stemma (immagine tua nella cartella stemma)",
+    "filter": "*.png|*.jpg|*.jpeg|*.webp|*.svg",
+    "folder": "stemma"
+  },
   "orologio": {
     "type": "checkbox",
     "value": true,

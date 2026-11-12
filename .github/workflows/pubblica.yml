@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 20
       - name: Controllo sintassi
-        run: for f in shared/kit.js wallpapers/*/main.js scripts/*.mjs; do node --check "$f"; done
+        run: for f in shared/*.js wallpapers/*/main.js scripts/*.mjs; do node --check "$f"; done
       - name: Prepara i pacchetti
         run: node scripts/pacchetti.mjs
       - name: Crea gli .zip per Lively

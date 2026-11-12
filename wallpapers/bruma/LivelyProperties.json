@@ -1,0 +1,83 @@
+{
+  "velocita": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Velocità",
+    "items": [
+      "Lento",
+      "Medio",
+      "Dinamico"
+    ]
+  },
+  "intensita": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Intensità",
+    "items": [
+      "Calmo (icone leggibili)",
+      "Equilibrato",
+      "Vivace"
+    ]
+  },
+  "palette": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Palette colori",
+    "items": [
+      "Lavanda",
+      "Salvia",
+      "Notte",
+      "Sabbia"
+    ]
+  },
+  "schermi": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Schermi (usa la modalità Span)",
+    "items": [
+      "Automatico",
+      "1 schermo",
+      "2 schermi affiancati (principale a destra)",
+      "3 schermi a L (principale, destra, sopra)"
+    ]
+  },
+  "citta": {
+    "type": "textbox",
+    "value": "",
+    "text": "Città per il meteo (vuoto = niente meteo)"
+  },
+  "orologio": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Orologio"
+  },
+  "calendario": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Calendario"
+  },
+  "sistema": {
+    "type": "checkbox",
+    "value": true,
+    "text": "CPU, GPU, RAM e rete"
+  },
+  "musica": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Brano in riproduzione"
+  },
+  "audio": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Respira con la musica"
+  },
+  "fps": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Fotogrammi al secondo",
+    "items": [
+      "30 (risparmio energetico)",
+      "60"
+    ]
+  }
+}

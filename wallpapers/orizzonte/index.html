@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orizzonte</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#000}</style>
+</head>
+<body>
+<script>
+  // Carica le librerie comuni (accanto a index.html nel pacchetto, in ../../shared/ nel repo), poi lo sfondo.
+  (function () {
+    var libs = ["kit","info"];
+    function load(src, ok, ko) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.body.appendChild(s); }
+    function next(i) {
+      if (i === libs.length) return load('main.js');
+      var f = libs[i] + '.js';
+      load(f, function () { next(i + 1); }, function () { load('../../shared/' + f, function () { next(i + 1); }); });
+    }
+    next(0);
+  })();
+</script>
+</body>
+</html>

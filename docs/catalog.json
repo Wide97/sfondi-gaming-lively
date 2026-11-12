@@ -10,6 +10,11 @@
       "Pastello",
       "Mono"
     ],
+    "info": false,
+    "libs": [
+      "kit"
+    ],
+    "extraDirs": [],
     "extras": [
       "Orologio (insegna al neon)",
       "Reagisci alla musica",
@@ -27,6 +32,11 @@
       "Pastello",
       "Mono"
     ],
+    "info": false,
+    "libs": [
+      "kit"
+    ],
+    "extraDirs": [],
     "extras": [
       "Orologio di bordo",
       "Parallasse con il mouse",
@@ -44,6 +54,11 @@
       "Pastello",
       "Mono"
     ],
+    "info": false,
+    "libs": [
+      "kit"
+    ],
+    "extraDirs": [],
     "extras": [
       "Orologio",
       "Scintille dal mouse",
@@ -61,6 +76,11 @@
       "Pastello",
       "Mono"
     ],
+    "info": false,
+    "libs": [
+      "kit"
+    ],
+    "extraDirs": [],
     "extras": [
       "Timer missione (orologio)",
       "Mirino sul mouse",
@@ -71,19 +91,77 @@
     "dir": "rossoneri",
     "title": "Rossoneri",
     "tag": "Calcio · Curva Sud",
-    "desc": "Notte di stadio in curva: coreografia rossonera con sette stelle, bandiere al vento, fumogeni, la ola che arriva dagli altri schermi e fuochi d'artificio. La scritta della coreografia si può cambiare. Sfondo non ufficiale fatto da tifosi, senza loghi del club.",
+    "desc": "Notte di stadio in curva: coreografia rossonera con sette stelle, bandiere al vento, fumogeni, la ola che arriva dagli altri schermi e fuochi d'artificio. La scritta della coreografia si può cambiare e puoi aggiungere un'immagine tua al centro. Sfondo non ufficiale fatto da tifosi: nessun logo del club è incluso.",
     "palettes": [
       "Rossonero",
       "Notte di Coppa",
       "Trasferta",
       "Oro"
     ],
+    "info": false,
+    "libs": [
+      "kit"
+    ],
+    "extraDirs": [
+      "stemma"
+    ],
     "extras": [
       "Scritta della coreografia",
+      "Stemma (immagine tua nella cartella stemma)",
       "Orologio sul tabellone",
       "Fumogeni",
       "Fuochi d'artificio al clic",
       "Reagisci alla musica"
+    ]
+  },
+  {
+    "dir": "orizzonte",
+    "title": "Orizzonte",
+    "tag": "Soft · Meteo",
+    "desc": "Colline morbide sotto un cielo che segue l'ora vera: alba, giorno, tramonto e notte arrivano quando arrivano fuori dalla finestra, e nuvole, pioggia o neve seguono il meteo della tua città. Con orologio, meteo attuale, prossime ore e prossimi giorni, orari di alba e tramonto.",
+    "palettes": [
+      "Colline",
+      "Lago",
+      "Dune",
+      "Grafite"
+    ],
+    "info": true,
+    "libs": [
+      "kit",
+      "info"
+    ],
+    "extraDirs": [],
+    "extras": [
+      "Città per il meteo",
+      "Orologio",
+      "Pannelli meteo",
+      "Cielo che segue l'ora e il meteo reali"
+    ]
+  },
+  {
+    "dir": "bruma",
+    "title": "Bruma",
+    "tag": "Soft · Cruscotto",
+    "desc": "Nebbie di colore che si muovono piano, con un cruscotto discreto: orologio, calendario del mese con festività e settimana, uso di CPU, GPU, RAM e rete, il brano in riproduzione e, se vuoi, il meteo.",
+    "palettes": [
+      "Lavanda",
+      "Salvia",
+      "Notte",
+      "Sabbia"
+    ],
+    "info": true,
+    "libs": [
+      "kit",
+      "info"
+    ],
+    "extraDirs": [],
+    "extras": [
+      "Città per il meteo (vuoto = niente meteo)",
+      "Orologio",
+      "Calendario",
+      "CPU, GPU, RAM e rete",
+      "Brano in riproduzione",
+      "Respira con la musica"
     ]
   }
 ]

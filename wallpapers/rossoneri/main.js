@@ -229,6 +229,7 @@
   function paintChoreoText(K, c, w, h) {
     const P = K.pal;
     const txt = scritta(K);
+    if (stemmaImg) return paintChoreoStemma(K, c, w, h, txt);
     let fs = h * lv('textSize');
     c.font = `900 ${fs}px ${SANS}`;
     const tw = c.measureText(txt).width;
@@ -242,6 +243,50 @@
     const sr = h * .045;
     for (let i = 0; i < 7; i++) {
       starPath(c, w / 2 + (i - 3) * sr * 3, h * .82, sr);
+      c.fillStyle = P.star; c.fill(); c.lineWidth = h * .006; c.strokeStyle = P.stroke; c.stroke();
+    }
+  }
+
+  /* ---------- stemma personale ----------
+   * Nessuno stemma è incluso nel repo. L'opzione "Stemma" (folderDropdown di Lively) elenca le
+   * immagini che l'utente mette nella cartella stemma/ dello sfondo sul proprio PC: lo sfondo la
+   * mette al centro della coreografia e la scritta passa in alto. Senza immagine resta la scritta.
+   */
+  let stemmaImg = null, stemmaSrc = null;
+
+  function loadStemma(val) {
+    const src = val ? String(val).replace(/\\/g, '/') : null;
+    if (src === stemmaSrc) return;
+    stemmaSrc = src;
+    if (!src) { stemmaImg = null; if (G) buildChoreo(Kit); return; }
+    const im = new Image();
+    im.onload = () => { if (stemmaSrc === src) { stemmaImg = im; if (G) buildChoreo(Kit); } };
+    im.onerror = () => { if (stemmaSrc === src) { stemmaImg = null; if (G) buildChoreo(Kit); } };
+    // Lively passa il percorso relativo ("stemma/x.png"); se arriva solo il nome del file lo completo
+    im.src = /[\/:]/.test(src) ? src : 'stemma/' + src;
+  }
+
+  function paintChoreoStemma(K, c, w, h, txt) {
+    const P = K.pal;
+    // scritta in alto, al posto di "CURVA SUD"
+    let fs = h * .1;
+    c.font = `900 ${fs}px ${SANS}`;
+    const tw = c.measureText(txt).width;
+    if (tw > w * .8) { fs *= w * .8 / tw; c.font = `900 ${fs}px ${SANS}`; }
+    c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+    c.lineWidth = fs * .1; c.strokeStyle = P.stroke;
+    c.strokeText(txt, w / 2, h * .15); c.fillStyle = P.text; c.fillText(txt, w / 2, h * .15);
+    // stemma al centro, proporzioni originali, con un alone scuro per staccarlo dalle strisce
+    const maxH = h * .52, maxW = w * .4, k = Math.min(maxH / stemmaImg.naturalHeight, maxW / stemmaImg.naturalWidth);
+    const iw = stemmaImg.naturalWidth * k, ih = stemmaImg.naturalHeight * k, cy = h * .5;
+    const g = c.createRadialGradient(w / 2, cy, 0, w / 2, cy, Math.max(iw, ih) * .75);
+    g.addColorStop(0, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(stemmaImg, w / 2 - iw / 2, cy - ih / 2, iw, ih);
+    const sr = h * .04;
+    for (let i = 0; i < 7; i++) {
+      starPath(c, w / 2 + (i - 3) * sr * 3, h * .86, sr);
       c.fillStyle = P.star; c.fill(); c.lineWidth = h * .006; c.strokeStyle = P.stroke; c.stroke();
     }
   }
@@ -569,6 +614,11 @@
     palettes: PALETTES,
     defaults: { scritta: 'FORZA MILAN', fumogeni: true },
     build, draw,
-    onProp(name) { if (name === 'scritta' && G) { buildChoreo(Kit); buildLed(Kit); } },
+    onProp(name, val) {
+      if (name === 'scritta' && G) { buildChoreo(Kit); buildLed(Kit); }
+      if (name === 'stemma') loadStemma(val);
+    },
   });
+  // nel browser lo stemma si prova con ?stemma=stemma/nomefile.png
+  if (Kit.props.stemma) loadStemma(Kit.props.stemma);
 })();

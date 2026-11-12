@@ -1,0 +1,8 @@
+STEMMA PERSONALE
+
+Metti in questa cartella un'immagine (PNG con sfondo trasparente è la scelta migliore,
+vanno bene anche JPG, WEBP e SVG), poi in Lively apri Personalizza e scegline una nel menu "Stemma".
+Lo sfondo la mette al centro della coreografia e sposta la scritta in alto.
+
+Il pacchetto non contiene nessuno stemma o logo ufficiale: l'immagine che aggiungi
+resta solo sul tuo PC ed è per uso personale.

@@ -1,0 +1,14 @@
+{
+  "AppVersion": "2.0.0.0",
+  "Title": "Bruma",
+  "Thumbnail": "thumbnail.jpg",
+  "Preview": "thumbnail.jpg",
+  "Desc": "Nebbie di colore lente con orologio, calendario, uso di CPU/GPU/RAM, brano in riproduzione e meteo.",
+  "Author": "Wide97",
+  "License": "MIT",
+  "Contact": "https://github.com/Wide97/sfondi-gaming-lively",
+  "Type": 2,
+  "FileName": "index.html",
+  "Arguments": "--system-information --system-nowplaying",
+  "IsAbsolutePath": false
+}

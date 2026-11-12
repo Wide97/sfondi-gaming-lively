@@ -14,3 +14,5 @@ Tutti i dettagli sono nel [README](https://github.com/Wide97/sfondi-gaming-livel
 | `portale-arcano.zip` | Portale Arcano (Fantasy / RPG) |
 | `radar-tattico.zip` | Radar Tattico (FPS / Tattico) |
 | `rossoneri.zip` | Rossoneri (Calcio · Curva Sud) |
+| `orizzonte.zip` | Orizzonte (Soft · Meteo) |
+| `bruma.zip` | Bruma (Soft · Cruscotto) |

@@ -53,7 +53,7 @@
 <div class="wrap">
   <header>
     <h1>Sfondi animati <span>gaming</span> per Windows</h1>
-    <p class="lead">Cinque sfondi animati per <a href="https://www.rocksdanister.com/lively/">Lively Wallpaper</a>: cyberpunk, sci-fi, fantasy, tattico e una notte rossonera in curva.
+    <p class="lead">Sfondi animati per <a href="https://www.rocksdanister.com/lively/">Lively Wallpaper</a>: cyberpunk, sci-fi, fantasy, tattico, una notte rossonera in curva e due sfondi soft con meteo, calendario e cruscotto del PC.
       Funzionano su 1, 2 o 3 schermi, hanno 4 palette di colori e 3 velocità.</p>
     <ol class="steps">
       <li><b>Installa Lively</b>: è gratis, anche dal Microsoft Store.</li>
@@ -102,7 +102,8 @@
       // le anteprime per palette sono su 1 schermo; quelle multi-schermo usano la palette Neon
       img.src = state.s === 1 ? (state.p === 0 ? `img/${w.dir}.jpg` : `img/${w.dir}-p${state.p}.jpg`) : `img/${w.dir}-${state.s}s.jpg`;
       card.querySelector('.shot').style.aspectRatio = state.s === 2 ? '32 / 9' : '16 / 9';   // 3 schermi a L: area 2×2
-      demo.href = `demo/${w.dir}/index.html?palette=${state.p}`;
+      // gli sfondi con informazioni usano dati di esempio: nel browser CPU e musica non esistono
+      demo.href = `demo/${w.dir}/index.html?palette=${state.p}${w.info ? '&demo=1' : ''}`;
       card.querySelectorAll('.seg').forEach((seg) => seg.querySelectorAll('button')
         .forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state[seg.dataset.k]))));
     };
