@@ -96,6 +96,10 @@
     const box = (z, fx, fy, fw, fh) => ({ x: z.x + z.w * fx, y: z.y + z.h * fy, w: z.w * fw, h: z.h * fh });
     if (lay.mode === 1) {
       Info.stack(ctx, K, box(lay.main, .72, .04, .25, .92), col('clock', 'calendar', 'weather', 'system', 'track'), C, 'right');
+    } else if (lay.mode === 4) {
+      // 2 schermi verticali: cruscotto sul monitor di sopra, il principale resta alle icone
+      Info.stack(ctx, K, box(lay.top, .05, .06, .3, .88), col('clock', 'calendar'), C);
+      Info.stack(ctx, K, box(lay.top, .63, .06, .32, .88), col('weather', 'system', 'track'), C);
     } else if (lay.mode === 2) {
       const z = lay.left;
       Info.stack(ctx, K, box(z, .08, .08, .38, .84), col('clock', 'calendar'), C);
@@ -109,7 +113,7 @@
 
   const veil = [{ b: .9, s: .88, c: .97 }, { b: .96, s: .95, c: 1 }, { b: 1, s: 1, c: 1 }];
   Kit.start({
-    palettes: PALETTES, veil, build, draw,
+    palettes: PALETTES, veil, build, draw, layouts: [4],
     defaults: { citta: '', calendario: true, sistema: true, musica: true },
     onProp(name, val) { if (name === 'citta') Info.setCity(val); },
   });

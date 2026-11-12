@@ -19,7 +19,7 @@ const common = {
   velocita: { type: 'dropdown', value: 1, text: 'Velocità', items: ['Lento', 'Medio', 'Dinamico'] },
   intensita: { type: 'dropdown', value: 0, text: 'Intensità', items: ['Calmo (icone leggibili)', 'Equilibrato', 'Vivace'] },
   palette: { type: 'dropdown', value: 0, text: 'Palette colori', items: ['Neon', 'Notturno', 'Pastello', 'Mono'] },
-  schermi: { type: 'dropdown', value: 0, text: 'Schermi (usa la modalità Span)', items: ['Automatico', '1 schermo', '2 schermi affiancati (principale a destra)', '3 schermi a L (principale, destra, sopra)'] },
+  schermi: { type: 'dropdown', value: 0, text: 'Schermi (usa la modalità Span)', items: ['Automatico', '1 schermo', '2 schermi affiancati (principale a destra)', '3 schermi a L (principale, destra, sopra)', "2 schermi uno sopra l'altro (principale sotto)"] },
 };
 const fps = { fps: { type: 'dropdown', value: 1, text: 'Fotogrammi al secondo', items: ['30 (risparmio energetico)', '60'] } };
 const cb = (text, value = true) => ({ type: 'checkbox', value, text });

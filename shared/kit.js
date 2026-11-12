@@ -77,12 +77,20 @@
   //   3 schermi     [ sopra      ]  (vuoto)        ← l'angolo in alto a destra non ha monitor
   //                 [ PRINCIPALE ][ destra ]
   //
+  //   2 verticali   [ sopra      ]                 ← schermi = 4
+  //                 [ PRINCIPALE ]
+  //
+  // La disposizione verticale la gestiscono gli sfondi che la dichiarano con
+  // Kit.start({ layouts: [4] }). Per gli altri la scena resta sul principale (modalità 1)
+  // e il monitor di sopra mostra il proseguimento dello sfondo (cielo, mappa…).
+  //
   // Rilevamento automatico: confronta l'area totale con la dimensione di un monitor.
   function detectScreens() {
     const sw = (window.screen && screen.width) || innerWidth, sh = (window.screen && screen.height) || innerHeight;
     const nx = Math.round(innerWidth / sw), ny = Math.round(innerHeight / sh);
     if (nx >= 2 && ny >= 2) return 3;
     if (nx >= 2) return 2;
+    if (ny >= 2) return 4;
     return innerWidth / Math.max(1, innerHeight) > 2.9 ? 2 : 1;
   }
 
@@ -107,6 +115,11 @@
       const w = W / 2, h = H / 2;
       const main = zone('principale', 0, h, w, h), right = zone('destra', w, h, w, h), top = zone('sopra', 0, 0, w, h);
       L = { mode: 3, main, right, top, side: [right, top], zones: [top, main, right], dead: [zone('vuoto', w, 0, w, h)], flowDir: -1 };
+    } else if (K.screens === 4) {
+      const h = H / 2, top = zone('sopra', 0, 0, W, h), main = zone('principale', 0, h, W, h);
+      L = ((K._o && K._o.layouts) || []).includes(4)
+        ? { mode: 4, main, top, side: [top], zones: [top, main], dead: [], flowDir: -1 }
+        : { mode: 1, main, side: [], zones: [main], dead: [], flowDir: -1 };   // ripiego: scena sul principale
     } else {
       L = { mode: 1, main: zone('principale', 0, 0, W, H), side: [], dead: [], flowDir: -1 };
       L.zones = [L.main];
@@ -137,7 +150,7 @@
   function recompute() {
     const p = K.props;
     K.speed = SPEEDS[K.clamp(p.velocita | 0, 0, 2)];
-    K.screens = (p.schermi | 0) === 0 ? detectScreens() : K.clamp(p.schermi | 0, 1, 3);
+    K.screens = (p.schermi | 0) === 0 ? detectScreens() : K.clamp(p.schermi | 0, 1, 4);
     if (K.palettes.length) K.pal = K.palettes[K.clamp(p.palette | 0, 0, K.palettes.length - 1)];
     K.intensity = K.clamp(p.intensita | 0, 0, 2);
     const v = ((K._o && K._o.veil) || VEIL)[K.intensity];

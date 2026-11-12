@@ -69,10 +69,10 @@ Nella libreria di Lively, clicca con il tasto destro sullo sfondo e scegli **Per
 Gli sfondi sono pensati per queste disposizioni dei monitor:
 
 ```
-2 schermi affiancati            3 schermi a L
+2 schermi affiancati            3 schermi a L              2 uno sopra l'altro
 
-[ secondario ][ PRINCIPALE ]    [ sopra      ]
-                                [ PRINCIPALE ][ destra ]
+[ secondario ][ PRINCIPALE ]    [ sopra      ]              [ sopra      ]
+                                [ PRINCIPALE ][ destra ]   [ PRINCIPALE ]
 ```
 
 Gli schermi non sono indipendenti: la scena è **una sola** e scorre da un monitor all'altro verso il principale.

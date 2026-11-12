@@ -115,10 +115,11 @@
 
   function drawSunMoon(ctx, K, lay, s, cloudy) {
     const veil = 1 - cloudy * .75;                  // col cielo coperto sole e luna si intravedono appena
-    const z = lay.mode === 3 ? lay.top : lay.mode === 2 ? { x: 0, y: lay.rowY, w: K.W, h: lay.rowH } : lay.main;
+    // con un monitor di sopra (3 a L o 2 verticali) sole e luna stanno lì; altrimenti nel cielo della fila
+    const z = lay.top ? lay.top : lay.mode === 2 ? { x: 0, y: lay.rowY, w: K.W, h: lay.rowH } : lay.main;
     const arc = (p) => ({
       x: z.x + z.w * (.08 + .84 * p),
-      y: lay.mode === 3 ? z.y + z.h * (1.05 - .82 * Math.sin(Math.PI * p)) : z.y + z.h * (.62 - .46 * Math.sin(Math.PI * p)),
+      y: lay.top ? z.y + z.h * (1.05 - .82 * Math.sin(Math.PI * p)) : z.y + z.h * (.62 - .46 * Math.sin(Math.PI * p)),
     });
     const r = Math.min(z.w, z.h) * .045;
     const day = (s.min - s.sr) / (s.ss - s.sr);
@@ -230,6 +231,10 @@
       Info.stack(ctx, K, box(lay.main, .7, .05, .27, .86), col('clock', 'weather', 'hourly', 'days'), C, 'right');
     } else if (lay.mode === 2) {
       Info.stack(ctx, K, box(lay.left, .07, .07, .3, .86), col('clock', 'weather', 'hourly', 'days'), C);
+    } else if (lay.mode === 4) {
+      // 2 schermi verticali: tutto sul monitor di sopra, il principale resta alle icone
+      Info.stack(ctx, K, box(lay.top, .05, .08, .3, .84), col('clock', 'weather'), C);
+      Info.stack(ctx, K, box(lay.top, .63, .08, .32, .84), col('hourly', 'days'), C);
     } else {
       Info.stack(ctx, K, box(lay.top, .06, .08, .32, .7), col('clock', 'weather'), C);
       Info.stack(ctx, K, box(lay.right, .62, .06, .32, .62), col('hourly', 'days'), C);
@@ -238,7 +243,7 @@
 
   const veil = [{ b: .86, s: .86, c: .96 }, { b: .94, s: .94, c: .99 }, { b: 1, s: 1, c: 1 }];
   Kit.start({
-    palettes: PALETTES, veil, build, draw,
+    palettes: PALETTES, veil, build, draw, layouts: [4],
     defaults: { citta: 'Milano', pannelli: true, cielo: true },
     onProp(name, val) { if (name === 'citta') Info.setCity(val); },
   });
