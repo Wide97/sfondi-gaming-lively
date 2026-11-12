@@ -1,0 +1,89 @@
+[
+  {
+    "dir": "neon-city",
+    "title": "Neon City",
+    "tag": "Cyberpunk",
+    "desc": "Skyline notturna su tre livelli di parallasse, pioggia, insegne al neon che sfarfallano e auto volanti. Le finestre pulsano a tempo di musica.",
+    "palettes": [
+      "Neon",
+      "Notturno",
+      "Pastello",
+      "Mono"
+    ],
+    "extras": [
+      "Orologio (insegna al neon)",
+      "Reagisci alla musica",
+      "Pioggia"
+    ]
+  },
+  {
+    "dir": "ponte-di-comando",
+    "title": "Ponte di Comando",
+    "tag": "Sci-fi",
+    "desc": "Sei sulla plancia di un'astronave: un gigante gassoso con anelli, una luna in orbita, la nebulosa e un HUD olografico. Su più schermi i montanti della cabina coincidono con le cornici dei monitor.",
+    "palettes": [
+      "Neon",
+      "Notturno",
+      "Pastello",
+      "Mono"
+    ],
+    "extras": [
+      "Orologio di bordo",
+      "Parallasse con il mouse",
+      "Cornice della plancia"
+    ]
+  },
+  {
+    "dir": "portale-arcano",
+    "title": "Portale Arcano",
+    "tag": "Fantasy / RPG",
+    "desc": "Cerchi di rune che ruotano in direzioni opposte, un vortice di energia, cristalli sospesi e lucciole. Muovendo il mouse lasci una scia di scintille.",
+    "palettes": [
+      "Neon",
+      "Notturno",
+      "Pastello",
+      "Mono"
+    ],
+    "extras": [
+      "Orologio",
+      "Scintille dal mouse",
+      "Reagisci alla musica"
+    ]
+  },
+  {
+    "dir": "radar-tattico",
+    "title": "Radar Tattico",
+    "tag": "FPS / Tattico",
+    "desc": "Radar con fascio rotante su mappa topografica, contatti che si accendono al passaggio, stato della squadra e registro operazioni. Il cursore diventa un mirino che aggancia i bersagli.",
+    "palettes": [
+      "Neon",
+      "Notturno",
+      "Pastello",
+      "Mono"
+    ],
+    "extras": [
+      "Timer missione (orologio)",
+      "Mirino sul mouse",
+      "Glitch digitali"
+    ]
+  },
+  {
+    "dir": "rossoneri",
+    "title": "Rossoneri",
+    "tag": "Calcio · Curva Sud",
+    "desc": "Notte di stadio in curva: coreografia rossonera con sette stelle, bandiere al vento, fumogeni, la ola che arriva dagli altri schermi e fuochi d'artificio. La scritta della coreografia si può cambiare. Sfondo non ufficiale fatto da tifosi, senza loghi del club.",
+    "palettes": [
+      "Rossonero",
+      "Notte di Coppa",
+      "Trasferta",
+      "Oro"
+    ],
+    "extras": [
+      "Scritta della coreografia",
+      "Orologio sul tabellone",
+      "Fumogeni",
+      "Fuochi d'artificio al clic",
+      "Reagisci alla musica"
+    ]
+  }
+]

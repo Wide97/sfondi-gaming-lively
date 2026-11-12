@@ -233,17 +233,19 @@
 
     resize();
 
-    let last = performance.now(), acc = 0;
+    // Limite FPS: 30 o 60. Senza limite requestAnimationFrame va alla frequenza del monitor
+    // (144/180 Hz sui monitor da gioco) e lo sfondo lavorerebbe 2-3 volte più del necessario.
+    // `next` avanza a passi fissi e assorbe il resto, così a 144 Hz si ottengono davvero ~60 FPS.
+    let lastDraw = performance.now(), next = lastDraw;
     function frame(now) {
       requestAnimationFrame(frame);
-      const dtReal = Math.min(0.1, (now - last) / 1000);
-      last = now;
-      if ((K.props.fps | 0) === 0) {            // limite a 30 FPS
-        acc += dtReal;
-        if (acc < 1 / 31) return;
-        K._frameDt = acc; acc = 0;
-      } else K._frameDt = dtReal;
-      const d = Math.min(0.1, K._frameDt);
+      const interval = 1000 / ((K.props.fps | 0) === 0 ? 30 : 60);
+      if (now < next - 1) return;                       // 1 ms di tolleranza per il jitter di vsync
+      if (now - next > interval) next = now;             // dopo una pausa non recupera a raffica
+      next += interval;
+      K._frameDt = Math.min(0.1, (now - lastDraw) / 1000);
+      lastDraw = now;
+      const d = K._frameDt;
       K.real += d;
       K.dt = d * K.speed;
       K.t += K.dt;

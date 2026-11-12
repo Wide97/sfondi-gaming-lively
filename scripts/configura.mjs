@@ -1,8 +1,12 @@
-// Genera per ogni sfondo index.html, LivelyInfo.json e LivelyProperties.json, più wallpapers/catalog.json.
+// Unica fonte dei dati degli sfondi. Genera:
+//   wallpapers/<dir>/index.html, LivelyInfo.json, LivelyProperties.json
+//   docs/catalog.json            letto dalla galleria (docs/index.html)
+//   .github/note-release.md      note della release con l'elenco degli .zip
 //
 //   node scripts/configura.mjs
 //
-// Per aggiungere uno sfondo: aggiungi una voce in `walls` e scrivi wallpapers/<dir>/main.js.
+// Per aggiungere uno sfondo: aggiungi una voce in `walls`, scrivi wallpapers/<dir>/main.js,
+// lancia questo script e `node scripts/anteprime.mjs <dir>`. Il README va aggiornato a mano.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,19 +24,24 @@ const fps = { fps: { type: 'dropdown', value: 1, text: 'Fotogrammi al secondo', 
 const cb = (text, value = true) => ({ type: 'checkbox', value, text });
 
 const walls = [
-  { dir: 'neon-city', title: 'Neon City', type: 2,
+  { dir: 'neon-city', title: 'Neon City', tag: 'Cyberpunk', type: 2,
+    about: 'Skyline notturna su tre livelli di parallasse, pioggia, insegne al neon che sfarfallano e auto volanti. Le finestre pulsano a tempo di musica.',
     desc: 'Skyline cyberpunk con parallasse, pioggia, insegne al neon e auto volanti. Le finestre pulsano con la musica.',
     props: { orologio: cb('Orologio (insegna al neon)'), audio: cb('Reagisci alla musica'), pioggia: cb('Pioggia') } },
-  { dir: 'ponte-di-comando', title: 'Ponte di Comando', type: 1,
+  { dir: 'ponte-di-comando', title: 'Ponte di Comando', tag: 'Sci-fi', type: 1,
+    about: "Sei sulla plancia di un'astronave: un gigante gassoso con anelli, una luna in orbita, la nebulosa e un HUD olografico. Su più schermi i montanti della cabina coincidono con le cornici dei monitor.",
     desc: "Vista dalla plancia di un'astronave: pianeta con anelli, nebulosa e HUD olografico con orologio di bordo.",
     props: { orologio: cb('Orologio di bordo'), mouse: cb('Parallasse con il mouse'), cornice: cb('Cornice della plancia') } },
-  { dir: 'portale-arcano', title: 'Portale Arcano', type: 2,
+  { dir: 'portale-arcano', title: 'Portale Arcano', tag: 'Fantasy / RPG', type: 2,
+    about: 'Cerchi di rune che ruotano in direzioni opposte, un vortice di energia, cristalli sospesi e lucciole. Muovendo il mouse lasci una scia di scintille.',
     desc: 'Cerchi di rune rotanti, cristalli sospesi e lucciole. Il mouse lascia scintille, le rune pulsano con la musica.',
     props: { orologio: cb('Orologio'), mouse: cb('Scintille dal mouse'), audio: cb('Reagisci alla musica') } },
-  { dir: 'radar-tattico', title: 'Radar Tattico', type: 1,
+  { dir: 'radar-tattico', title: 'Radar Tattico', tag: 'FPS / Tattico', type: 1,
+    about: 'Radar con fascio rotante su mappa topografica, contatti che si accendono al passaggio, stato della squadra e registro operazioni. Il cursore diventa un mirino che aggancia i bersagli.',
     desc: 'Radar con fascio rotante, mappa topografica, registro operazioni e mirino che aggancia i bersagli.',
     props: { orologio: cb('Timer missione (orologio)'), mouse: cb('Mirino sul mouse'), glitch: cb('Glitch digitali') } },
-  { dir: 'rossoneri', title: 'Rossoneri', type: 2,
+  { dir: 'rossoneri', title: 'Rossoneri', tag: 'Calcio · Curva Sud', type: 2,
+    about: "Notte di stadio in curva: coreografia rossonera con sette stelle, bandiere al vento, fumogeni, la ola che arriva dagli altri schermi e fuochi d'artificio. La scritta della coreografia si può cambiare. Sfondo non ufficiale fatto da tifosi, senza loghi del club.",
     palItems: ['Rossonero', 'Notte di Coppa', 'Trasferta', 'Oro'],
     desc: 'Notte di stadio in Curva Sud: coreografia rossonera, bandiere, fumogeni, ola e fuochi d\'artificio. Sfondo non ufficiale fatto da tifosi, non affiliato al club.',
     props: {
@@ -77,6 +86,25 @@ for (const w of walls) {
   if (w.palItems) props.palette = { ...common.palette, items: w.palItems };
   fs.writeFileSync(path.join(d, 'LivelyProperties.json'), JSON.stringify(props, null, 2) + '\n');
 }
-fs.writeFileSync(path.join(root, 'wallpapers', 'catalog.json'),
-  JSON.stringify(walls.map(({ dir, title, desc, props }) => ({ dir, title, desc, extras: Object.values(props).map((p) => p.text) })), null, 2) + '\n');
+// catalogo per la galleria: le opzioni specifiche di ogni sfondo diventano le "etichette" degli extra
+fs.writeFileSync(path.join(root, 'docs', 'catalog.json'), JSON.stringify(walls.map((w) => ({
+  dir: w.dir, title: w.title, tag: w.tag, desc: w.about,
+  palettes: w.palItems || common.palette.items,
+  extras: Object.values(w.props).map((p) => p.text),
+})), null, 2) + '\n');
+
+// note della release
+fs.writeFileSync(path.join(root, '.github', 'note-release.md'), `## Come si installa
+
+1. Installa **[Lively Wallpaper](https://www.rocksdanister.com/lively/)** (gratis, anche dal Microsoft Store).
+2. Scarica lo \`.zip\` dello sfondo che vuoi qui sotto, in **Assets**.
+3. Trascina lo \`.zip\` nella finestra di Lively e cliccaci sopra per applicarlo.
+
+Hai più monitor? Imposta in Lively la disposizione **Span**: gli sfondi supportano 2 schermi affiancati (principale a destra) e 3 schermi a L (principale, destra, sopra), con la scena che scorre da un monitor all'altro.
+Tutti i dettagli sono nel [README](https://github.com/${owner}/${repo}#readme).
+
+| File | Sfondo |
+|---|---|
+${walls.map((w) => `| \`${w.dir}.zip\` | ${w.title} (${w.tag}) |`).join('\n')}
+`);
 console.log('ok');

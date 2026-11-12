@@ -121,11 +121,11 @@ sfondi-gaming-lively/
 │  ├─ LivelyProperties.json   le opzioni di "Personalizza"
 │  └─ thumbnail.jpg
 ├─ shared/kit.js              base comune: proprietà, palette, velocità, multi-schermo, audio, mouse
-├─ docs/                      galleria GitHub Pages + immagini
+├─ docs/                      galleria GitHub Pages (legge catalog.json) + immagini
 ├─ scripts/
 │  ├─ anteprime.mjs           rigenera le anteprime con Edge headless
 │  ├─ pacchetti.mjs           prepara dist/ (pacchetti Lively + sito)
-│  └─ configura.mjs           genera index.html e i JSON di Lively per ogni sfondo
+│  └─ configura.mjs           unica fonte dei dati: genera i file di Lively, docs/catalog.json e le note di release
 └─ .github/workflows/         a ogni push aggiorna il sito, a ogni tag v* crea la release con gli .zip
 ```
 
@@ -142,7 +142,7 @@ git tag v1.1.0
 git push --tags
 ```
 
-**Aggiungere uno sfondo**: aggiungi una voce in `scripts/configura.mjs` e lancialo, scrivi la scena in `main.js` con `Kit.start({ palettes, defaults, build, draw })` e usa `Kit.layout()` per posizionare gli elementi per 1, 2 o 3 schermi.
+**Aggiungere uno sfondo**: aggiungi una voce in `scripts/configura.mjs` e lancialo (aggiorna anche galleria e note di release), scrivi la scena in `main.js` con `Kit.start({ palettes, defaults, build, draw })` e usa `Kit.layout()` per posizionare gli elementi per 1, 2 o 3 schermi.
 
 ## Licenza
 

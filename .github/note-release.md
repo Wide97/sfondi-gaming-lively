@@ -9,8 +9,8 @@ Tutti i dettagli sono nel [README](https://github.com/Wide97/sfondi-gaming-livel
 
 | File | Sfondo |
 |---|---|
-| `neon-city.zip` | Neon City (cyberpunk) |
-| `ponte-di-comando.zip` | Ponte di Comando (sci-fi) |
-| `portale-arcano.zip` | Portale Arcano (fantasy) |
-| `radar-tattico.zip` | Radar Tattico (FPS / tattico) |
-| `rossoneri.zip` | Rossoneri (calcio, Curva Sud, non ufficiale) |
+| `neon-city.zip` | Neon City (Cyberpunk) |
+| `ponte-di-comando.zip` | Ponte di Comando (Sci-fi) |
+| `portale-arcano.zip` | Portale Arcano (Fantasy / RPG) |
+| `radar-tattico.zip` | Radar Tattico (FPS / Tattico) |
+| `rossoneri.zip` | Rossoneri (Calcio · Curva Sud) |
