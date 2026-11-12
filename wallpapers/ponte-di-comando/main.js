@@ -20,6 +20,15 @@
       planet: ['#ffd27a', '#8a5a00', '#1a0f00'], band: '#ffe2a8', atm: '#ffb000', ring: '#ffcc66', frame: '#060400' },
   ];
 
+  // Quanto "spinge" ogni effetto: [calmo, equilibrato, vivace]
+  const LIVELLI = {
+    atm:     [.45, .75, 1],       // alone dell'atmosfera del pianeta
+    hudGlow: [.4, .75, 1],        // alone dell'orologio di bordo
+    traffic: [.4, .7, 1],         // navette e comete (frequenza)
+    blink:   [false, true, true], // spie della plancia e luci della stazione
+  };
+  const lv = (k) => Kit.pick(LIVELLI[k]);
+
   const MONO = '"Cascadia Mono", Consolas, "Courier New", monospace';
   let nebula, stars = [], storms = [], par = { x: 0, y: 0 }, comet = null;
   let shuttles = [], nextShuttle = 1, scene = null;
@@ -96,7 +105,7 @@
   function drawShuttles(ctx, K) {
     const P = K.pal;
     nextShuttle -= K.dt;
-    if (nextShuttle <= 0) { spawnShuttle(K); nextShuttle = 2.5 + Math.random() * 3; }
+    if (nextShuttle <= 0) { spawnShuttle(K); nextShuttle = (2.5 + Math.random() * 3) / lv('traffic'); }
     for (let i = shuttles.length - 1; i >= 0; i--) {
       const s = shuttles[i];
       s.u += K.dt * s.sp;
@@ -155,7 +164,7 @@
     ctx.fillStyle = P.planet[0]; ctx.fillRect(-st.r * .03, -st.r * .45, st.r * .06, st.r * .35);
     for (let i = 0; i < 12; i++) {
       const a = i / 12 * 6.283 + rot;
-      ctx.fillStyle = Math.sin(K.real * 2 + i) > 0 ? P.hud : K.rgba(P.hud, .2);
+      ctx.fillStyle = !lv('blink') ? K.rgba(P.hud, .5) : Math.sin(K.real * 2 + i) > 0 ? P.hud : K.rgba(P.hud, .2);
       ctx.fillRect(Math.cos(a) * st.r - 1.5, Math.sin(a) * st.r * ry - 1.5, 3, 3);
     }
     ctx.restore();
@@ -177,7 +186,7 @@
       ctx.restore();
     };
     let g = ctx.createRadialGradient(px, py, R * .9, px, py, R * 1.5);
-    g.addColorStop(0, K.rgba(P.atm, .45)); g.addColorStop(1, K.rgba(P.atm, 0));
+    g.addColorStop(0, K.rgba(P.atm, .45 * lv('atm'))); g.addColorStop(1, K.rgba(P.atm, 0));
     ctx.fillStyle = g; ctx.fillRect(px - R * 1.6, py - R * 1.6, R * 3.2, R * 3.2);
     ring(Math.PI, Math.PI * 2);
     ctx.save();
@@ -265,7 +274,7 @@
     const P = K.pal, w = s * .5, h = s * .27, ck = K.clock();
     panel(ctx, K, x, y, w, h, 'TEMPO DI BORDO');
     ctx.fillStyle = P.hud; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    ctx.shadowColor = P.hud; ctx.shadowBlur = 12;
+    ctx.shadowColor = P.hud; ctx.shadowBlur = 12 * lv('hudGlow');
     ctx.font = `300 ${h * .42}px "Segoe UI", Arial, sans-serif`;
     ctx.fillText(ck.time, x + 12, y + h * .62);
     const tw = ctx.measureText(ck.time).width;
@@ -325,7 +334,8 @@
         ctx.beginPath(); ctx.moveTo(z.x, Y(.86)); ctx.lineTo(z.x + z.w * .18, Y(.925));
         ctx.lineTo(z.x + z.w * .82, Y(.925)); ctx.lineTo(z.x + z.w, Y(.86)); ctx.stroke();
         for (let i = 0; i < 14; i++) {
-          const on = Math.sin(K.real * (1 + (i % 5) * .7) + i * 2.1 + z.x) > -.2;
+          // nel calmo le spie restano fisse invece di lampeggiare
+          const on = lv('blink') ? Math.sin(K.real * (1 + (i % 5) * .7) + i * 2.1 + z.x) > -.2 : (i * 7 + 3) % 5 > 1;
           ctx.fillStyle = on ? K.rgba(i % 4 === 0 ? P.alert : P.hud, .85) : K.rgba(P.hud, .12);
           ctx.fillRect(z.x + z.w * (.3 + i * .03), Y(.955), z.w * .012, 4);
         }
@@ -377,7 +387,7 @@
     }
     ctx.globalAlpha = 1;
 
-    if (!comet && Math.random() < .002 * K.speed) {
+    if (!comet && Math.random() < .002 * K.speed * lv('traffic')) {
       const z = lay.zones[(Math.random() * lay.zones.length) | 0];
       comet = { x: z.x + Math.random() * z.w, y: z.y - 20, vx: -300 - Math.random() * 300, vy: 200 + Math.random() * 150, life: 0, z };
     }

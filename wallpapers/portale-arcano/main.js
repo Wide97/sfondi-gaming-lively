@@ -19,6 +19,18 @@
       core: ['#fff8e6', '#ffcc66', '#7a4a00'], crystal: ['#ffcc66', '#ffe7b0'], fly: '#ffe7b0', spark: '#ffd98a', fog: '#7a4a00' },
   ];
 
+  // Quanto "spinge" ogni effetto: [calmo, equilibrato, vivace]
+  const LIVELLI = {
+    core:    [.4, .7, 1],         // nucleo bianco del portale (la zona più chiara della scena)
+    rings:   [.5, .75, .9],       // cerchi di rune
+    streams: [.45, .75, 1],       // fiumi di energia
+    crystal: [.5, .8, 1],         // bagliore dei cristalli
+    flies:   [.4, .7, 1],         // quante lucciole
+    music:   [.25, .6, 1],        // quanto pulsa con la musica
+    glow:    [.5, .8, 1],         // alone dell'orologio
+  };
+  const lv = (k) => Kit.pick(LIVELLI[k]);
+
   let portal, sources = [], streams = [], crystals = [], flies = [], sparks = [], fog, lastMouse = null;
 
   /* ---------- rune procedurali (simboli inventati) ---------- */
@@ -112,7 +124,7 @@
     const P = K.pal, col = P.crystal[c.ci], x = c.x, y = c.y + Math.sin(K.t * .8 + c.ph) * c.h * .12;
     const w = c.h * .38, h = c.h;
     let g = ctx.createRadialGradient(x, y, 0, x, y, h * 1.4);
-    g.addColorStop(0, K.rgba(col, .22 + K.mid * .2)); g.addColorStop(1, K.rgba(col, 0));
+    g.addColorStop(0, K.rgba(col, (.22 + K.mid * .2 * lv('music')) * lv('crystal'))); g.addColorStop(1, K.rgba(col, 0));
     ctx.fillStyle = g; ctx.fillRect(x - h * 1.4, y - h * 1.4, h * 2.8, h * 2.8);
     ctx.save(); ctx.translate(x, y); ctx.rotate(c.tilt + Math.sin(K.t * .3 + c.ph) * .05);
     const pts = [[0, -h * .6], [w, -h * .2], [w * .75, h * .3], [0, h * .5], [-w * .75, h * .3], [-w, -h * .2]];
@@ -169,7 +181,7 @@
       }
     }
 
-    flies = Array.from({ length: Math.round(K.W * K.H / 9000) }, () => {
+    flies = Array.from({ length: Math.round(K.W * K.H / 9000 * lv('flies')) }, () => {
       const p = randomVisible(K, lay, rnd);
       return { x: p.x, y: p.y, v: 8 + rnd() * 22, ph: rnd() * 6.28, r: .8 + rnd() * 1.8 };
     });
@@ -198,25 +210,25 @@
   }
 
   function drawPortal(ctx, K, p) {
-    const P = K.pal, pulse = 1 + K.bass * .06;
+    const P = K.pal, pulse = 1 + K.bass * .06 * lv('music'), core = lv('core');
     let g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.R * 1.5);
-    g.addColorStop(0, K.rgba(P.core[1], .2 + K.bass * .2)); g.addColorStop(1, K.rgba(P.core[1], 0));
+    g.addColorStop(0, K.rgba(P.core[1], (.2 + K.bass * .2 * lv('music')) * core)); g.addColorStop(1, K.rgba(P.core[1], 0));
     ctx.fillStyle = g; ctx.fillRect(p.x - p.R * 1.5, p.y - p.R * 1.5, p.R * 3, p.R * 3);
     ctx.globalCompositeOperation = 'lighter';
     const br = .85 + .15 * Math.sin(K.t * 1.4);
     g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.R * .5);
-    g.addColorStop(0, K.rgba(P.core[0], .85 * br)); g.addColorStop(.35, K.rgba(P.core[1], .45 * br)); g.addColorStop(1, K.rgba(P.core[2], 0));
+    g.addColorStop(0, K.rgba(P.core[0], .85 * br * core)); g.addColorStop(.35, K.rgba(P.core[1], .45 * br * core)); g.addColorStop(1, K.rgba(P.core[2], 0));
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.R * .5, 0, 6.283); ctx.fill();
     const Rc = p.R * .5;
     ctx.fillStyle = P.ring2;
     for (const v of p.vortex) {
       v.a += (1.4 / (v.r + .15)) * K.dt * v.sp; v.r -= .09 * K.dt * v.sp;
       if (v.r < .04) v.r = 1;
-      ctx.globalAlpha = Math.min(1, (1 - v.r) * 1.2) * .8;
+      ctx.globalAlpha = Math.min(1, (1 - v.r) * 1.2) * .8 * core;
       const s = 1 + (1 - v.r) * 1.5;
       ctx.fillRect(p.x + Math.cos(v.a) * v.r * Rc, p.y + Math.sin(v.a) * v.r * Rc * .96, s, s);
     }
-    ctx.globalAlpha = .9;
+    ctx.globalAlpha = lv('rings');
     drawRings(ctx, K, p, pulse);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
@@ -225,10 +237,10 @@
   function drawSource(ctx, K, s) {
     const P = K.pal;
     const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.R * 1.6);
-    g.addColorStop(0, K.rgba(P.ring2, .25 + K.mid * .2)); g.addColorStop(1, K.rgba(P.ring2, 0));
+    g.addColorStop(0, K.rgba(P.ring2, (.25 + K.mid * .2 * lv('music')) * lv('rings'))); g.addColorStop(1, K.rgba(P.ring2, 0));
     ctx.fillStyle = g; ctx.fillRect(s.x - s.R * 1.6, s.y - s.R * 1.6, s.R * 3.2, s.R * 3.2);
-    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .85;
-    drawRings(ctx, K, s, 1 + K.mid * .05);
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .85 * lv('rings');
+    drawRings(ctx, K, s, 1 + K.mid * .05 * lv('music'));
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
 
@@ -237,17 +249,17 @@
     ctx.globalCompositeOperation = 'lighter';
     // scia luminosa del fiume
     for (const [w, a] of [[18, .05], [6, .08], [1.5, .25]]) {
-      ctx.strokeStyle = K.rgba(P.ring2, a); ctx.lineWidth = w;
+      ctx.strokeStyle = K.rgba(P.ring2, a * lv('streams')); ctx.lineWidth = w;
       ctx.beginPath(); ctx.moveTo(s.p0.x, s.p0.y); ctx.quadraticCurveTo(s.c.x, s.c.y, s.p1.x, s.p1.y); ctx.stroke();
     }
-    const boost = 1 + K.bass * 1.5;
+    const boost = 1 + K.bass * 1.5 * lv('music');
     for (const p of s.parts) {
       p.u += K.dt * .09 * p.sp * boost;
       if (p.u > 1) p.u -= 1;
       const b = K.bez(s.p0, s.c, s.p1, p.u), L = Math.hypot(b.tx, b.ty) || 1;
       const wob = Math.sin(p.u * 14 + p.ph + K.t * 2) * p.amp * Math.sin(p.u * Math.PI);
       const x = b.x - (b.ty / L) * wob, y = b.y + (b.tx / L) * wob;
-      ctx.globalAlpha = Math.sin(p.u * Math.PI) * .9;
+      ctx.globalAlpha = Math.sin(p.u * Math.PI) * .9 * lv('streams');
       ctx.fillStyle = p.k ? P.ring : P.ring2;
       const sz = 1.2 + (1 - Math.abs(wob) / 20) * 1.6;
       ctx.fillRect(x, y, sz, sz);
@@ -313,7 +325,7 @@
       const p = portal, ck = K.clock(), s = lay.main.s, y = p.y + p.R * 1.32;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.font = `400 ${s * .065}px Georgia, "Times New Roman", serif`;
-      ctx.shadowColor = P.ring; ctx.shadowBlur = 18 + K.bass * 20;
+      ctx.shadowColor = P.ring; ctx.shadowBlur = (18 + K.bass * 20 * lv('music')) * lv('glow');
       ctx.fillStyle = K.rgba(P.core[0], .92);
       ctx.fillText(ck.time.split('').join(' '), p.x, y);
       ctx.font = `italic 400 ${s * .022}px Georgia, "Times New Roman", serif`;

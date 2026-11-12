@@ -51,7 +51,9 @@ function harness(wall, job) {
     }
     const c = document.createElement('canvas'); c.width = ${job.ow}; c.height = ${job.oh};
     const x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
+    x.filter = Kit.veilCSS;                 // il velo dell'intensità è un filtro CSS: va riapplicato qui
     x.drawImage(Kit.canvas, 0, 0, ${job.ow}, ${job.oh});
+    x.filter = 'none';
     // l'angolo senza monitor (disposizione a L) viene mostrato vuoto, come appare davvero
     const k = ${job.ow} / Kit.W;
     for (const d of Kit.layout().dead) {

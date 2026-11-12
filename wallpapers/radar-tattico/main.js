@@ -24,6 +24,15 @@
     'SCANSIONE TERMICA COMPLETATA',
   ];
 
+  // Quanto "spinge" ogni effetto: [calmo, equilibrato, vivace]
+  const LIVELLI = {
+    sweep:  [.5, .8, 1],          // fascio del radar
+    blips:  [.55, .8, 1],         // bagliore dei contatti e dei pacchetti
+    glitch: [0, .5, 1],           // frequenza dei glitch (0 = mai, anche con l'opzione attiva)
+    blink:  [false, true, true],  // cursore del registro e spia del satellite
+  };
+  const lv = (k) => Kit.pick(LIVELLI[k]);
+
   let staticLayer, scan, radar, contacts = [], logLines = [], nextLog = 2, glitchUntil = 0, nextGlitch = 4, lock = null;
   let panels, links = {}, packets = [], pulses = [], sat = null, nextSat = 3, lastContactPacket = 0;
 
@@ -253,7 +262,7 @@
     logLines.forEach((l, i) => {
       const last = i === logLines.length - 1;
       ctx.fillStyle = last ? P.text : K.rgba(P.hud, .35 + .5 * (i / logLines.length));
-      ctx.fillText(last && Math.sin(K.real * 8) > 0 ? l + ' _' : l, x + 14, y + 30 + i * fs * 1.45);
+      ctx.fillText(last && lv('blink') && Math.sin(K.real * 8) > 0 ? l + ' _' : l, x + 14, y + 30 + i * fs * 1.45);
     });
     ctx.restore();
   }
@@ -271,7 +280,7 @@
     }
     ctx.fillStyle = K.rgba(P.bg, .9); ctx.fillRect(-12, -12, 24, 24); ctx.strokeRect(-12, -12, 24, 24);
     ctx.beginPath(); ctx.arc(0, 18, 9, Math.PI, 0); ctx.stroke();
-    ctx.fillStyle = Math.sin(K.real * 4) > 0 ? P.alert : K.rgba(P.alert, .2); ctx.fillRect(-3, -3, 6, 6);
+    ctx.fillStyle = !lv('blink') || Math.sin(K.real * 4) > 0 ? P.alert : K.rgba(P.alert, .2); ctx.fillRect(-3, -3, 6, 6);
     ctx.restore();
     ctx.fillStyle = K.rgba(P.text, .8); ctx.font = `600 12px ${MONO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText('SAT-3 · UPLINK ATTIVO', x, y - 44);
@@ -296,12 +305,12 @@
       if (pk.d >= pk.link.len) { packets.splice(i, 1); pk.onArrive && pk.onArrive(); continue; }
       const p = pointOn(pk.link, pk.d), q = pointOn(pk.link, Math.max(0, pk.d - 40));
       const g = ctx.createLinearGradient(q.x, q.y, p.x, p.y);
-      g.addColorStop(0, K.rgba(pk.color, 0)); g.addColorStop(1, K.rgba(pk.color, .9));
+      g.addColorStop(0, K.rgba(pk.color, 0)); g.addColorStop(1, K.rgba(pk.color, .9 * lv('blips')));
       ctx.strokeStyle = g; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(q.x, q.y);
       for (let d = Math.max(0, pk.d - 40) + 5; d < pk.d; d += 5) { const r = pointOn(pk.link, d); ctx.lineTo(r.x, r.y); }
       ctx.lineTo(p.x, p.y); ctx.stroke();
-      ctx.fillStyle = '#fff'; ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+      ctx.fillStyle = K.rgba('#ffffff', lv('blips')); ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
     }
   }
 
@@ -332,11 +341,11 @@
 
     const prev = (K.t - K.dt) * 1.1, th = K.t * 1.1, trail = 1.1;
     const g = ctx.createConicGradient(th - trail, x, y);
-    g.addColorStop(0, K.rgba(P.hud, 0)); g.addColorStop(trail / 6.283, K.rgba(P.hud, .32));
+    g.addColorStop(0, K.rgba(P.hud, 0)); g.addColorStop(trail / 6.283, K.rgba(P.hud, .32 * lv('sweep')));
     g.addColorStop(trail / 6.283 + .001, K.rgba(P.hud, 0)); g.addColorStop(1, K.rgba(P.hud, 0));
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, R, th - trail, th); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = K.rgba(P.text, .9); ctx.lineWidth = 2;
+    ctx.strokeStyle = K.rgba(P.text, .9 * lv('sweep')); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(th) * R, y + Math.sin(th) * R); ctx.stroke();
 
     const norm = (a) => ((a % 6.283) + 6.283) % 6.283;
@@ -359,7 +368,7 @@
       const cx = x + c.x * R, cy = y + c.y * R, col = c.hostile ? P.alert : P.hud;
       ctx.globalAlpha = c.lit;
       const gg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16);
-      gg.addColorStop(0, K.rgba(col, .7)); gg.addColorStop(1, K.rgba(col, 0));
+      gg.addColorStop(0, K.rgba(col, .7 * lv('blips'))); gg.addColorStop(1, K.rgba(col, 0));
       ctx.fillStyle = gg; ctx.fillRect(cx - 16, cy - 16, 32, 32);
       ctx.fillStyle = col;
       if (c.hostile) { ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.PI / 4); ctx.fillRect(-4, -4, 8, 8); ctx.restore(); }
@@ -435,8 +444,8 @@
     crosshair(ctx, K);
     ctx.drawImage(scan.c, 0, 0, W, H);
 
-    if (K.props.glitch) {
-      if (K.real > nextGlitch) { glitchUntil = K.real + .12 + Math.random() * .15; nextGlitch = K.real + 5 + Math.random() * 9; }
+    if (K.props.glitch && lv('glitch') > 0) {
+      if (K.real > nextGlitch) { glitchUntil = K.real + .12 + Math.random() * .15; nextGlitch = K.real + (5 + Math.random() * 9) / lv('glitch'); }
       if (K.real < glitchUntil) {
         const c = K.canvas;
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -451,5 +460,7 @@
     }
   }
 
-  Kit.start({ palettes: PALETTES, defaults: { glitch: true }, build, draw });
+  // il radar è già scuro: basta un velo più leggero
+  const veil = [{ b: .8, s: .78, c: .95 }, { b: .9, s: .9, c: .98 }, { b: 1, s: 1, c: 1 }];
+  Kit.start({ palettes: PALETTES, defaults: { glitch: true }, veil, build, draw });
 })();

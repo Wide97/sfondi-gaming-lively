@@ -15,8 +15,21 @@
 
   const SPEEDS = [0.45, 1, 1.9];          // lento, medio, dinamico
 
+  // Intensità: calmo / equilibrato / vivace.
+  // Ogni livello mette sul canvas un "velo" (filtro CSS: costa quasi zero, lo applica la GPU)
+  // che abbassa luminosità e saturazione, così le icone del desktop restano leggibili.
+  // Gli sfondi possono passare il proprio velo a Kit.start({ veil }) e usare Kit.pick([...])
+  // per ridurre lampeggi, flash e particelle nei livelli più calmi.
+  const VEIL = [
+    { b: .62, s: .72, c: .92 },
+    { b: .82, s: .88, c: .97 },
+    { b: 1, s: 1, c: 1 },
+  ];
+
   const K = (window.Kit = {
-    props: { velocita: 1, palette: 0, schermi: 0, fps: 1, orologio: true, mouse: true, audio: true },
+    props: { velocita: 1, intensita: 0, palette: 0, schermi: 0, fps: 1, orologio: true, mouse: true, audio: true },
+    intensity: 0,      // 0 calmo · 1 equilibrato · 2 vivace
+    veilCSS: 'none',   // filtro del velo (usato anche da scripts/anteprime.mjs)
     speed: 1,
     screens: 1,
     t: 0,              // tempo scalato dalla velocità (secondi)
@@ -126,7 +139,14 @@
     K.speed = SPEEDS[K.clamp(p.velocita | 0, 0, 2)];
     K.screens = (p.schermi | 0) === 0 ? detectScreens() : K.clamp(p.schermi | 0, 1, 3);
     if (K.palettes.length) K.pal = K.palettes[K.clamp(p.palette | 0, 0, K.palettes.length - 1)];
+    K.intensity = K.clamp(p.intensita | 0, 0, 2);
+    const v = ((K._o && K._o.veil) || VEIL)[K.intensity];
+    K.veilCSS = v.b === 1 && v.s === 1 && v.c === 1 ? 'none' : `brightness(${v.b}) saturate(${v.s}) contrast(${v.c})`;
+    if (K.canvas) K.canvas.style.filter = K.veilCSS;
   }
+
+  // valore per il livello di intensità corrente: K.pick([calmo, equilibrato, vivace])
+  K.pick = (arr) => arr[K.intensity];
 
   function applyURL() {
     const q = new URLSearchParams(location.search);
@@ -147,9 +167,10 @@
   // Chiamata da Lively per ogni proprietà all'avvio e a ogni modifica dal pannello.
   window.livelyPropertyListener = function (name, val) {
     K.props[name] = val;
-    const before = K.screens, palBefore = K.pal;
+    const before = K.screens, palBefore = K.pal, intBefore = K.intensity;
     recompute();
-    if (K.screens !== before || K.pal !== palBefore) scheduleRebuild();
+    // l'intensità cambia anche ciò che viene preparato in build() (es. pubblico, coreografia)
+    if (K.screens !== before || K.pal !== palBefore || K.intensity !== intBefore) scheduleRebuild();
     if (K._o && K._o.onProp) K._o.onProp(name, val);
   };
 
@@ -223,6 +244,7 @@
     document.body.appendChild(canvas);
     ctx = canvas.getContext('2d', { alpha: false });
     K.canvas = canvas; K.ctx = ctx;
+    canvas.style.filter = K.veilCSS;
 
     addEventListener('resize', scheduleRebuild);
     addEventListener('mousemove', (e) => {

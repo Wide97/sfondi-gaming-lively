@@ -23,6 +23,20 @@
       neon: ['#00e5ff', '#7ff3ff'], rain: '#4fd8e8', street: '#00e5ff' },
   ];
 
+  // Quanto "spinge" ogni effetto: [calmo, equilibrato, vivace]
+  const LIVELLI = {
+    lights: [.5, .72, .8],        // finestre accese
+    signs:  [.55, .8, 1],         // insegne al neon
+    music:  [.25, .6, 1],         // quanto pulsa con la musica
+    beams:  [.35, .7, 1],         // fari della torre
+    street: [.45, .75, 1],        // bagliore della strada
+    rain:   [.45, .75, 1],        // densità e opacità della pioggia
+    glow:   [.5, .8, 1],          // alone dell'orologio e degli ascensori
+    moon:   [.45, .75, 1],        // luna (con 1 schermo è proprio dove stanno le icone)
+    blink:  [false, true, true],  // insegne che sfarfallano, luce di segnalazione, orologio che tremola
+  };
+  const lv = (k) => Kit.pick(LIVELLI[k]);
+
   const WORDS = ['BAR', 'HOTEL', '24H', 'RAMEN', 'CLUB', 'ARCADE', 'PIXEL', 'CYBER', 'DATA',
     'OPEN', 'LIVE', 'GAME', 'NET', 'LOOT', 'XP', 'NOVA'];
 
@@ -133,7 +147,7 @@
     for (let k = 0; k < 2; k++) {
       const a = -Math.PI / 2 - .25 - .45 * (.5 + .5 * Math.sin(K.t * .25 + k * 2.4)), len = t.th * .9, sp = .06;
       const g = ctx.createLinearGradient(t.x, t.topY, t.x + Math.cos(a) * len, t.topY + Math.sin(a) * len);
-      g.addColorStop(0, K.rgba(P.neon[k % P.neon.length], .16)); g.addColorStop(1, K.rgba(P.neon[k % P.neon.length], 0));
+      g.addColorStop(0, K.rgba(P.neon[k % P.neon.length], .16 * lv('beams'))); g.addColorStop(1, K.rgba(P.neon[k % P.neon.length], 0));
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.moveTo(t.x, t.topY);
       ctx.lineTo(t.x + Math.cos(a - sp) * len, t.topY + Math.sin(a - sp) * len);
@@ -146,16 +160,16 @@
     // ascensori di luce: salgono lungo la torre (con 3 schermi passano dal principale a quello di sopra)
     ctx.globalCompositeOperation = 'lighter';
     for (const l of lifts) {
-      l.p += K.dt * .045 * l.sp * (1 + K.bass);
+      l.p += K.dt * .045 * l.sp * (1 + K.bass * lv('music'));
       if (l.p > 1) l.p -= 1;
       const x = t.x + l.lane * t.bw * .045, y = t.base - t.th * (.04 + l.p * .9);
       const g = ctx.createLinearGradient(x, y, x, y + 60);
-      g.addColorStop(0, K.rgba(P.neon[1 % P.neon.length], .9)); g.addColorStop(1, K.rgba(P.neon[1 % P.neon.length], 0));
+      g.addColorStop(0, K.rgba(P.neon[1 % P.neon.length], .9 * lv('glow'))); g.addColorStop(1, K.rgba(P.neon[1 % P.neon.length], 0));
       ctx.fillStyle = g; ctx.fillRect(x - 1.5, y, 3, 60);
       ctx.fillStyle = '#fff'; ctx.fillRect(x - 2, y - 3, 4, 6);
     }
     ctx.globalCompositeOperation = 'source-over';
-    if (Math.sin(K.real * 3) > 0) {                                   // luce di segnalazione
+    if (!lv('blink') || Math.sin(K.real * 3) > 0) {                   // luce di segnalazione (fissa nel calmo)
       ctx.fillStyle = '#ff3355'; ctx.beginPath(); ctx.arc(t.x, t.topY, 3, 0, 6.283); ctx.fill();
     }
   }
@@ -182,7 +196,7 @@
       if (K.visible(x, y)) stars.push({ x, y, r: .5 + rnd() * 1.1, p: rnd() * 6.28 });
     }
     cars = Array.from({ length: Math.max(8, Math.round(K.W * lay.zones.length / 700)) }, () => makeCar(K, lay, rnd));
-    drops = Array.from({ length: Math.min(4000, Math.round(K.W * K.H / 2800)) }, () => ({
+    drops = Array.from({ length: Math.min(4000, Math.round(K.W * K.H / 2800 * lv('rain'))) }, () => ({
       x: rnd() * K.W, y: rnd() * K.H, l: 8 + rnd() * 18, v: 550 + rnd() * 600 }));
   }
 
@@ -193,13 +207,13 @@
     const x0 = lay.flowDir < 0 ? -off : off - Lw;          // scorre verso lo schermo principale
     const y = lay.rowY, h = lay.rowH;
     for (const ox of [x0, x0 + Lw]) if (ox < K.W && ox + Lw > 0) ctx.drawImage(layer.sil.c, ox, y, Lw, h);
-    ctx.globalAlpha = K.clamp(.8 + K.bass * .6, 0, 1);
+    ctx.globalAlpha = K.clamp(lv('lights') + K.bass * .6 * lv('music'), 0, 1);
     ctx.globalCompositeOperation = 'lighter';
     for (const ox of [x0, x0 + Lw]) if (ox < K.W && ox + Lw > 0) ctx.drawImage(layer.lights.c, ox, y, Lw, h);
     for (const s of layer.signs) {
       let a = .85 + .15 * Math.sin(K.real * 2 + s.ph);
-      if (s.glitchy && Math.sin(K.real * 9 + s.ph) * Math.sin(K.real * 5.3 + s.ph * 2) > .55) a = .12;
-      ctx.globalAlpha = K.clamp(a * (1 + K.mid * .5), 0, 1);
+      if (lv('blink') && s.glitchy && Math.sin(K.real * 9 + s.ph) * Math.sin(K.real * 5.3 + s.ph * 2) > .55) a = .12;
+      ctx.globalAlpha = K.clamp(a * lv('signs') * (1 + K.mid * .5 * lv('music')), 0, 1);
       for (const ox of [x0, x0 + Lw]) {
         const x = s.x + ox - s.g;
         if (x < K.W && x + s.img.w > 0) ctx.drawImage(s.img.c, x, y + s.y - s.g, s.img.w, s.img.h);
@@ -229,15 +243,15 @@
     const mx = lay.mode === 1 ? m.x + m.w * .1 : mz.x + mz.w * .28;
     const my = mz.y + mz.h * (lay.mode === 3 ? .3 : .18), mr = mz.s * (lay.mode === 3 ? .09 : .07);
     g = ctx.createRadialGradient(mx, my, mr * .5, mx, my, mr * 5);
-    g.addColorStop(0, K.rgba(P.moon, .35)); g.addColorStop(1, K.rgba(P.moon, 0));
+    g.addColorStop(0, K.rgba(P.moon, .35 * lv('moon'))); g.addColorStop(1, K.rgba(P.moon, 0));
     ctx.fillStyle = g; ctx.fillRect(mx - mr * 5, my - mr * 5, mr * 10, mr * 10);
-    ctx.fillStyle = P.moon; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.283); ctx.fill();
+    ctx.globalAlpha = lv('moon'); ctx.fillStyle = P.moon; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1;
 
     drawTower(ctx, K);
     drawTiled(ctx, K, layers[0], lay);
 
     g = ctx.createLinearGradient(0, lay.rowY + lay.rowH * .45, 0, lay.ground);
-    g.addColorStop(0, K.rgba(P.haze, 0)); g.addColorStop(1, K.rgba(P.haze, .14 + K.bass * .1));
+    g.addColorStop(0, K.rgba(P.haze, 0)); g.addColorStop(1, K.rgba(P.haze, (.14 + K.bass * .1 * lv('music')) * lv('street')));
     ctx.fillStyle = g; ctx.fillRect(0, lay.rowY + lay.rowH * .45, W, lay.rowH * .55);
 
     drawTiled(ctx, K, layers[1], lay);
@@ -257,12 +271,12 @@
     drawTiled(ctx, K, layers[2], lay);
 
     g = ctx.createLinearGradient(0, lay.ground - lay.rowH * .14, 0, lay.ground);
-    g.addColorStop(0, K.rgba(P.street, 0)); g.addColorStop(1, K.rgba(P.street, .28 + K.bass * .2));
+    g.addColorStop(0, K.rgba(P.street, 0)); g.addColorStop(1, K.rgba(P.street, (.28 + K.bass * .2 * lv('music')) * lv('street')));
     ctx.fillStyle = g; ctx.fillRect(0, lay.ground - lay.rowH * .14, W, lay.rowH * .14);
 
     // pioggia, inclinata nella direzione del flusso
     if (K.props.pioggia) {
-      ctx.strokeStyle = K.rgba(P.rain, .35); ctx.lineWidth = 1;
+      ctx.strokeStyle = K.rgba(P.rain, .35 * lv('rain')); ctx.lineWidth = 1;
       ctx.beginPath();
       const slant = .12 * lay.flowDir;
       for (const d of drops) {
@@ -277,10 +291,10 @@
     if (K.props.orologio) {
       const ck = K.clock(), fs = m.s * .14;
       const cx = m.x + m.w * (lay.mode === 1 ? .4 : .36), cy = m.y + m.h * .15;
-      const flick = Math.sin(K.real * 23) > .97 ? .55 : 1;
+      const flick = lv('blink') && Math.sin(K.real * 23) > .97 ? .55 : 1;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.font = `200 ${fs}px "Segoe UI", Arial, sans-serif`;
-      ctx.shadowColor = P.neon[0]; ctx.shadowBlur = 30 + K.bass * 30;
+      ctx.shadowColor = P.neon[0]; ctx.shadowBlur = (30 + K.bass * 30 * lv('music')) * lv('glow');
       ctx.fillStyle = K.rgba(P.neon[0], .9 * flick); ctx.fillText(ck.time, cx, cy);
       ctx.shadowBlur = 8; ctx.fillStyle = K.rgba('#ffffff', .85 * flick); ctx.fillText(ck.time, cx, cy);
       ctx.font = `400 ${fs * .2}px "Segoe UI", Arial, sans-serif`;

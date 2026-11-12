@@ -28,6 +28,32 @@
       fire: ['#ffd36b', '#fff3c4', '#ff2b3d'], led: '#ffcc55', led2: '#ffffff', pitch: ['#1b6229', '#22702f'], light: '#fff1cc', star: '#ffd36b' },
   ];
 
+  // Quanto "spinge" ogni effetto per livello di intensità: [calmo, equilibrato, vivace].
+  // Nel calmo la scena è una curva di notte a luci basse: niente rumore ad alto contrasto
+  // nel pubblico, coreografia smorzata, pochi fuochi e niente lampi a ritmo di musica,
+  // così le icone del desktop restano leggibili.
+  const LIVELLI = {
+    crowd:    [.42, .7, 1],      // luminosità del pubblico
+    crowdMix: [.55, .25, 0],     // quanto il pubblico si fonde col colore della tribuna (meno rumore)
+    white:    [.15, .6, 1],      // peso dei tifosi in bianco (i puntini più chiari)
+    choreo:   [.5, .78, 1],      // luminosità delle strisce della coreografia
+    text:     [.55, .8, 1],      // opacità della scritta e delle stelle della coreografia
+    textSize: [.22, .26, .3],    // altezza della scritta rispetto alla coreografia
+    wave:     [.5, .8, 1],       // ampiezza dello sventolio
+    phones:   [.2, .55, 1],      // quante luci dei telefoni
+    beams:    [.35, .7, 1],      // fasci di luce verso il cielo
+    glow:     [.4, .7, .85],     // fari sotto il tetto e coni sul campo
+    led:      [.45, .75, 1],     // tabelloni LED a bordo campo
+    ola:      [.35, .7, 1],      // schiarita della ola
+    smoke:    [.45, .75, 1],     // densità del fumo
+    flare:    [.35, .7, 1],      // bagliore delle torce
+    fireEvery:[[9, 16], [3, 6], [1.2, 4]], // secondi tra un fuoco automatico e l'altro (1 schermo)
+    fireSize: [.55, .8, 1],
+    fireBass: [false, true, true],         // fuochi lanciati dai bassi della musica
+    blink:    [false, true, true],         // spia lampeggiante del tabellone
+  };
+  const lv = (k) => Kit.pick(LIVELLI[k]);
+
   const SANS = '"Segoe UI", Arial, sans-serif';
   let G, skyL, frontL, glowL, crowdL, choreo, ledTile, smokeSprite;
   let stars = [], seven = [], phones = [], flags = [], emitters = [], smoke = [], rockets = [], bursts = [];
@@ -165,19 +191,23 @@
     const cols = Math.ceil(K.W / cell), rows = Math.ceil(H / cell);
     const tiny = document.createElement('canvas'); tiny.width = cols; tiny.height = rows;
     const tc = tiny.getContext('2d'), id = tc.createImageData(cols, rows), d = id.data;
-    const pal = P.crowd.map(([c, w]) => [rgb(c), w]);
+    // i colori chiari (tifosi in bianco) pesano meno nei livelli calmi: sono loro a fare "rumore"
+    const pal = P.crowd.map(([c, w]) => { const v = rgb(c); return [v, v[0] + v[1] + v[2] > 540 ? w * lv('white') : w]; });
+    const lum = lv('crowd'), mix = lv('crowdMix'), st = rgb(P.stand);
     for (let y = 0; y < rows; y++) {
       const shade = .55 + .45 * (y / rows);
       for (let x = 0; x < cols; x++) {
-        const [r, g, b] = weighted(pal, rnd()), k = shade * (.75 + rnd() * .35), p = (y * cols + x) * 4;
-        d[p] = r * k; d[p + 1] = g * k; d[p + 2] = b * k; d[p + 3] = 255;
+        const c = weighted(pal, rnd()), k = shade * (.75 + rnd() * .35) * lum, p = (y * cols + x) * 4;
+        for (let i = 0; i < 3; i++) d[p + i] = K.lerp(c[i] * k, st[i], mix);
+        d[p + 3] = 255;
       }
     }
     tc.putImageData(id, 0, 0);
     crowdL = K.offscreen(K.W, H);
-    crowdL.x.imageSmoothingEnabled = false;
+    // nei livelli calmi i "pixel" del pubblico vengono ammorbiditi: trama invece di puntinato
+    crowdL.x.imageSmoothingEnabled = mix > 0;
     crowdL.x.drawImage(tiny, 0, 0, cols, rows, 0, 0, cols * cell, rows * cell);
-    phones = Array.from({ length: Math.round(K.W * H / 6000) }, () => ({
+    phones = Array.from({ length: Math.round(K.W * H / 6000 * lv('phones')) }, () => ({
       x: rnd() * K.W, y: G.standTop + rnd() * H, f: .5 + rnd() * 2, ph: rnd() * 6.28 }));
   }
 
@@ -187,8 +217,19 @@
     const img = K.offscreen(w, h), c = img.x;
     const n = 14;
     for (let i = 0; i < n; i++) { c.fillStyle = P.choreo[i % 2]; c.fillRect(i * w / n, 0, w / n + 1, h); }
+    c.fillStyle = `rgba(0,0,0,${1 - lv('choreo')})`; c.fillRect(0, 0, w, h);    // strisce smorzate
+    // scritta e stelle su un livello a parte, poi composte con l'opacità del livello
+    // (stroke e fill semitrasparenti sovrapposti renderebbero i bordi delle lettere sporchi)
+    const t = K.offscreen(w, h), tc = t.x;
+    paintChoreoText(K, tc, w, h);
+    c.globalAlpha = lv('text'); c.drawImage(t.c, 0, 0, w, h); c.globalAlpha = 1;
+    choreo = { img, x, y, w, h };
+  }
+
+  function paintChoreoText(K, c, w, h) {
+    const P = K.pal;
     const txt = scritta(K);
-    let fs = h * .3;
+    let fs = h * lv('textSize');
     c.font = `900 ${fs}px ${SANS}`;
     const tw = c.measureText(txt).width;
     if (tw > w * .88) { fs *= w * .88 / tw; c.font = `900 ${fs}px ${SANS}`; }
@@ -203,7 +244,6 @@
       starPath(c, w / 2 + (i - 3) * sr * 3, h * .82, sr);
       c.fillStyle = P.star; c.fill(); c.lineWidth = h * .006; c.strokeStyle = P.stroke; c.stroke();
     }
-    choreo = { img, x, y, w, h };
   }
 
   function buildLed(K) {
@@ -259,7 +299,10 @@
       for (let i = 0; i < n; i++) {
         const x = isMain ? (i < 2 ? m.x + m.w * (.025 + i * .04) : m.x + m.w * (.905 + (i - 2) * .04)) : z.x + z.w * (.05 + rnd() * .9);
         const tier = G.tiers[(rnd() * 3) | 0];
-        flags.push({ x, base: tier[1] - 4 * G.u, pole: G.h * (.09 + rnd() * .05), L: G.h * .075, H: G.h * .045, ph: rnd() * 6.28, sp: .8 + rnd() * .5 });
+        const fl = G.h * .075;
+        // sventolano nella direzione del flusso, ma mai fuori dal bordo dello schermo
+        const fdir = x + fl > K.W ? -1 : x - fl < 0 ? 1 : lay.flowDir;
+        flags.push({ x, dir: fdir, base: tier[1] - 4 * G.u, pole: G.h * (.09 + rnd() * .05), L: fl, H: G.h * .045, ph: rnd() * 6.28, sp: .8 + rnd() * .5 });
       }
     }
     // fumogeni davanti alla curva (e qualcuno sui secondari)
@@ -290,11 +333,11 @@
   }
 
   function burst(K, x, y, k, front) {
-    const P = K.pal, u = G.u, n = Math.round(60 + 40 * k);
+    const P = K.pal, u = G.u, sz = front ? 1 : lv('fireSize'), n = Math.round((60 + 40 * k) * sz);
     const c1 = P.fire[(Math.random() * P.fire.length) | 0], c2 = P.fire[(Math.random() * P.fire.length) | 0];
     const parts = [];
     for (let i = 0; i < n; i++) {
-      const a = Math.random() * 6.283, s = (60 + Math.random() * 170) * u * (.55 + .45 * k);
+      const a = Math.random() * 6.283, s = (60 + Math.random() * 170) * u * (.55 + .45 * k) * (.6 + .4 * sz);
       parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, col: i % 3 ? c1 : c2 });
     }
     bursts.push({ parts, life: 1.8 + Math.random() * .6, age: 0, front, flash: { x, y } });
@@ -360,7 +403,7 @@
       const bx = m.x + m.w * (.14 + k * .24), a = -Math.PI / 2 - .08 + .32 * Math.sin(K.t * .28 + k * 1.7), sp = .045;
       const col = k % 2 ? P.light : P.fire[0];
       const g = ctx.createLinearGradient(bx, G.roofTop, bx + Math.cos(a) * beamLen, G.roofTop + Math.sin(a) * beamLen);
-      g.addColorStop(0, K.rgba(col, .2 + K.bass * .15)); g.addColorStop(1, K.rgba(col, 0));
+      g.addColorStop(0, K.rgba(col, (.2 + K.bass * .15) * lv('beams'))); g.addColorStop(1, K.rgba(col, 0));
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.moveTo(bx, G.roofTop);
       ctx.lineTo(bx + Math.cos(a - sp) * beamLen, G.roofTop + Math.sin(a - sp) * beamLen);
@@ -371,8 +414,11 @@
 
     // fuochi automatici e a tempo di musica
     nextRocket -= K.dt; fireCooldown -= K._frameDt;
-    if (nextRocket <= 0) { launchRocket(K); nextRocket = top3 ? .8 + Math.random() * 1.8 : 1.2 + Math.random() * 2.8; }
-    if (K.bass > .55 && fireCooldown <= 0) { launchRocket(K); fireCooldown = .5; }
+    if (nextRocket <= 0) {
+      const [a, b] = lv('fireEvery');                      // con 3 schermi un po' più spesso: c'è più cielo
+      launchRocket(K); nextRocket = (a + Math.random() * (b - a)) * (top3 ? .7 : 1);
+    }
+    if (lv('fireBass') && K.bass > .55 && fireCooldown <= 0) { launchRocket(K); fireCooldown = .5; }
     drawFireworks(ctx, K, false);
 
     // pubblico + ola
@@ -383,11 +429,11 @@
       const b = bump(x, wx);
       if (b < .03) continue;
       ctx.drawImage(crowdL.c, x * dpr, 0, sw * dpr, crowdL.c.height, x, G.standTop - b * 9 * u, sw, ch);
-      ctx.fillStyle = `rgba(255,255,255,${.08 * b})`; ctx.fillRect(x, G.standTop - b * 9 * u, sw, ch);
+      ctx.fillStyle = `rgba(255,255,255,${.08 * b * lv('ola')})`; ctx.fillRect(x, G.standTop - b * 9 * u, sw, ch);
     }
 
     // coreografia che sventola (si alza anche lei quando passa la ola)
-    const c = choreo, cs = 8, amp = 1.8 * u * (1 + K.mid * 1.5);
+    const c = choreo, cs = 8, amp = 1.8 * u * (1 + K.mid * 1.5) * lv('wave');
     for (let sx = 0; sx < c.w; sx += cs) {
       const x = c.x + sx, wave = Math.sin(sx * .03 + K.t * 2.2);
       const dy = wave * amp - bump(x, wx) * 10 * u;
@@ -422,7 +468,7 @@
       const seg = 12, ptsT = [], ptsB = [];
       for (let i = 0; i <= seg; i++) {
         const q = i / seg, wv = Math.sin(q * 5 - K.t * 6 * f.sp * (1 + K.mid) + f.ph) * f.H * .25 * q;
-        const x = f.x + dir * q * f.L;
+        const x = f.x + f.dir * q * f.L;
         ptsT.push([x, top + wv]); ptsB.push([x, top + f.H + wv * 1.1]);
       }
       const mid = ptsT.map(([x, y], i) => [x, (y + ptsB[i][1]) / 2]);
@@ -438,11 +484,13 @@
 
     // tabelloni LED a bordo campo: scorrono verso il principale (la porta poi ci sta davanti)
     const lw = ledTile.w, lh = G.adBot - G.adTop, off = (K.t * 80 * u) % lw;
+    ctx.globalAlpha = lv('led');
     for (let x = dir > 0 ? off - lw : -off; x < W; x += lw) ctx.drawImage(ledTile.c, x, G.adTop, lw, lh);
+    ctx.globalAlpha = 1;
 
     ctx.drawImage(frontL.c, 0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = .85 + K.bass * .15;
+    ctx.globalAlpha = K.clamp(lv('glow') * (1 + K.bass * .15), 0, 1);
     ctx.drawImage(glowL.c, 0, 0, W, H);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
@@ -459,7 +507,7 @@
       const p = smoke[i];
       stepSmoke(p, K._frameDt * (.7 + K.speed * .3));
       if (p.age > p.max || !K.visible(p.x, p.y - p.r * .5) && p.y < G.Y) { smoke.splice(i, 1); continue; }
-      ctx.globalAlpha = .22 * Math.min(1, p.age / 1.2) * (1 - p.age / p.max);
+      ctx.globalAlpha = .22 * lv('smoke') * Math.min(1, p.age / 1.2) * (1 - p.age / p.max);
       ctx.drawImage(smokeSprite.c, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
     }
     ctx.globalAlpha = 1;
@@ -468,7 +516,8 @@
       for (const e of emitters) {
         const fl = 1 + .25 * Math.sin(K.real * 23 + e.ph) + .15 * Math.sin(K.real * 37 + e.ph * 2);
         const r = 16 * u * fl, g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, r * 3);
-        g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.15, K.rgba(P.smoke, .9)); g.addColorStop(1, K.rgba(P.smoke, 0));
+        const fa = lv('flare');
+        g.addColorStop(0, `rgba(255,255,255,${.95 * fa})`); g.addColorStop(.15, K.rgba(P.smoke, .9 * fa)); g.addColorStop(1, K.rgba(P.smoke, 0));
         ctx.fillStyle = g; ctx.fillRect(e.x - r * 3, e.y - r * 3, r * 6, r * 6);
         ctx.fillStyle = '#ffd9a0';
         for (let k = 0; k < 4; k++) ctx.fillRect(e.x + Math.sin(K.real * 17 + k * 9 + e.ph) * 10 * u, e.y - ((K.real * 90 + k * 25) % 40) * u, 1.5 * u, 1.5 * u);
@@ -503,7 +552,7 @@
       ctx.textAlign = 'center'; ctx.font = `800 ${h * .34}px ${SANS}`; ctx.fillStyle = P.led;
       ctx.shadowColor = P.led; ctx.shadowBlur = 12 * u; ctx.fillText(scritta(K), m.cx, y + h * .52); ctx.shadowBlur = 0;
     }
-    if (Math.sin(K.real * 4) > 0) { ctx.fillStyle = '#ff2b3d'; ctx.beginPath(); ctx.arc(x + 14 * u, y + 14 * u, 4 * u, 0, 6.283); ctx.fill(); }
+    if (lv('blink') && Math.sin(K.real * 4) > 0) { ctx.fillStyle = '#ff2b3d'; ctx.beginPath(); ctx.arc(x + 14 * u, y + 14 * u, 4 * u, 0, 6.283); ctx.fill(); }
     // griglia LED
     ctx.fillStyle = 'rgba(0,0,0,.35)';
     for (let gx = x; gx < x + w; gx += 3 * u) ctx.fillRect(gx, y, u, h);

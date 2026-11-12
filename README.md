@@ -5,6 +5,7 @@ Sfondi **animati** a tema gaming per il desktop di **Windows**, da usare con [Li
 - 5 sfondi: **cyberpunk, sci-fi, fantasy, tattico** e una **notte rossonera in curva**
 - Funzionano su **1 schermo, 2 affiancati o 3 a L**: la scena scorre da un monitor all'altro verso quello principale
 - **4 palette** (Neon, Notturno, Pastello, Mono) e **3 velocità** (Lento, Medio, Dinamico)
+- **3 intensità** (Calmo, Equilibrato, Vivace): con **Calmo**, il predefinito, le icone del desktop restano leggibili
 - Alcuni sfondi reagiscono alla **musica** e al **mouse**
 - Leggeri: niente video, solo codice. Lively li mette in pausa quando giochi a schermo intero
 
@@ -52,6 +53,7 @@ Nella libreria di Lively, clicca con il tasto destro sullo sfondo e scegli **Per
 | Opzione | Valori | Note |
 |---|---|---|
 | Velocità | Lento · Medio · Dinamico | quanto si muove tutto |
+| Intensità | Calmo · Equilibrato · Vivace | Calmo (predefinito) abbassa luci e colori e toglie lampeggi e flash, così le icone si leggono; Vivace è lo stile originale |
 | Palette colori | Neon · Notturno · Pastello · Mono | |
 | Schermi | Automatico · 1 · 2 affiancati · 3 a L | vedi sotto |
 | Orologio | sì / no | ogni sfondo ha il suo stile |
@@ -105,7 +107,8 @@ Gli schermi non sono indipendenti: la scena è **una sola** e scorre da un monit
 ## Prestazioni
 
 - Lively mette in **pausa** lo sfondo quando c'è un gioco o un'app a schermo intero.
-- Le parti statiche della scena vengono disegnate una volta sola: a ogni fotogramma si ridisegna solo quello che si muove.
+- Le parti statiche della scena (palazzi, pubblico, mappa…) vengono preparate una volta sola e a ogni fotogramma vengono solo ricopiate, non ricalcolate.
+- Il limite di FPS è reale: con **60** lo sfondo non supera i 60 FPS anche su un monitor a 144 o 180 Hz.
 - Sui portatili imposta **30 FPS** e la velocità **Lento**.
 
 ---
@@ -142,7 +145,7 @@ git tag v1.1.0
 git push --tags
 ```
 
-**Aggiungere uno sfondo**: aggiungi una voce in `scripts/configura.mjs` e lancialo (aggiorna anche galleria e note di release), scrivi la scena in `main.js` con `Kit.start({ palettes, defaults, build, draw })` e usa `Kit.layout()` per posizionare gli elementi per 1, 2 o 3 schermi.
+**Aggiungere uno sfondo**: aggiungi una voce in `scripts/configura.mjs` e lancialo (aggiorna anche galleria e note di release), scrivi la scena in `main.js` con `Kit.start({ palettes, defaults, build, draw })` e usa `Kit.layout()` per posizionare gli elementi per 1, 2 o 3 schermi. Per l'intensità, definisci una tabella `LIVELLI` con i valori `[calmo, equilibrato, vivace]` e leggili con `Kit.pick(...)`: tieni bassi nel calmo lampeggi, flash e zone molto chiare. Il velo (luminosità e saturazione) lo applica già `kit.js`, e si può personalizzare con `Kit.start({ veil })`.
 
 ## Licenza
 

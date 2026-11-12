@@ -9,6 +9,16 @@
       "Dinamico"
     ]
   },
+  "intensita": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Intensità",
+    "items": [
+      "Calmo (icone leggibili)",
+      "Equilibrato",
+      "Vivace"
+    ]
+  },
   "palette": {
     "type": "dropdown",
     "value": 0,
