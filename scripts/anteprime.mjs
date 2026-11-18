@@ -80,7 +80,7 @@ function render(wall, job, i) {
   const file = path.join(TMP, `${wall}-${i}.html`);
   fs.writeFileSync(file, harness(wall, job));
   const url = pathToFileURL(file).href + (job.query ? '?' + job.query : '');
-  const args = ['--headless=new', '--disable-gpu', '--allow-file-access-from-files', '--no-first-run',
+  const args = ['--headless=new', '--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files', '--no-first-run',
     `--user-data-dir=${path.join(TMP, 'profile-' + i)}`, '--dump-dom', url];
   return new Promise((resolve, reject) => {
     execFile(EDGE, args, { maxBuffer: 64 * 1024 * 1024, timeout: 180000 }, (err, stdout) => {
