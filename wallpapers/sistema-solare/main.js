@@ -25,6 +25,7 @@
     stars:   [.7, .85, 1],
     sun:     [.45, .75, 1],     // bagliore del Sole sul bordo
     twinkle: [.25, .55, 1],
+    drift:   [.7, .85, 1],      // velocità delle stelle che scorrono
     meteor:  [0, .5, 1],        // frequenza delle stelle cadenti
     label:   [.55, .7, .85],
   };
@@ -262,7 +263,9 @@ void main(){
   }
 
   /* ---------- stato ---------- */
-  let G, bg, twinkles = [], active = [], nextIdx = 0, meteor = null, nextMeteor = 20;
+  let G, bg, twinkles = [], drifters = [], active = [], nextIdx = 0, meteor = null, nextMeteor = 20;
+  // stelle che scorrono piano su 3 piani di profondità (px/s a 1080p, velocità Medio)
+  const DRIFT = [1.2, 2.8, 5.5];
 
   const ROW = () => Kit.layout().rowH;
 
@@ -392,6 +395,16 @@ void main(){
       }
     }
 
+    // stelle in primo piano che si muovono (densità uniforme, sopra la fascia che resta ferma)
+    drifters = [];
+    const nd = Math.round(W * H / 2300);
+    for (let i = 0; i < nd; i++) {
+      const k = i % 7 === 0 ? 2 : i % 3 === 0 ? 1 : 0;                  // pochi vicini, molti lontani
+      const [R, Gc, B] = cols[(rnd() * cols.length) | 0];
+      const s = [.6, .9, 1.4][k] + rnd() * .5, a = ([.35, .55, .8][k] + rnd() * .2) * kS;
+      drifters.push({ x: rnd() * W, y: rnd() * H, s, k, col: `rgba(${R},${Gc},${B},${Math.min(1, a)})` });
+    }
+
     // bagliore del Sole che sta appena fuori dal bordo
     const sp = sunPos(K), sr = ROW() * 1.1, kSun = lv('sun');
     const g = c.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, sr);
@@ -498,6 +511,15 @@ void main(){
   function draw(ctx, K) {
     const W = K.W, H = K.H;
     ctx.drawImage(bg.c, 0, 0, W, H);
+
+    // stelle che scorrono piano nella direzione dei pianeti (più veloci quelle più vicine)
+    const dir = K.layout().mode === 3 ? -1 : 1, dk = lv('drift') * ROW() / 1080 * K.dt;
+    for (const s of drifters) {
+      s.x += dir * DRIFT[s.k] * dk;
+      if (s.x > W + 2) s.x -= W + 4; else if (s.x < -2) s.x += W + 4;
+      ctx.fillStyle = s.col;
+      ctx.fillRect(s.x, s.y, s.s, s.s);
+    }
 
     // poche stelle brillanti che scintillano piano
     const kt = lv('twinkle');
