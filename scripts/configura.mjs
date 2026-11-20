@@ -74,11 +74,14 @@ const walls = [
       musica: cb('Brano in riproduzione'), audio: cb('Respira con la musica'),
     } },
 
-  { dir: 'sistema-solare', title: 'Sistema Solare', tag: 'Spazio · Realistico', type: 1,
+  { dir: 'sistema-solare', title: 'Sistema Solare', tag: 'Spazio · Realistico', type: 1, libs: ['cielo'],
     palItems: ['Realistica', 'Blu profondo', 'Nebulosa', 'Mono'],
-    about: "I pianeti del Sistema Solare attraversano gli schermi uno alla volta, in ordine dal Sole, davanti alla Via Lattea: Mercurio, Venere, la Terra con la Luna, Marte, Giove con la Grande Macchia Rossa, Saturno con i suoi anelli, Urano e Nettuno. Ruotano sul loro asse e sono illuminati dal lato del Sole. Con 2 schermi entrano da sinistra ed escono dal principale; con 3 a L arrivano da destra, passano sul principale e salgono nello schermo di sopra. Accanto a ogni pianeta compaiono nome e dati veri.",
+    about: "I pianeti del Sistema Solare attraversano gli schermi uno alla volta, in ordine dal Sole, davanti alla Via Lattea: Mercurio, Venere, la Terra con la Luna, Marte, Giove con la Grande Macchia Rossa, Saturno con i suoi anelli, Urano e Nettuno. Ruotano sul loro asse e sono illuminati dal lato del Sole. Con 2 schermi entrano da sinistra ed escono dal principale; con 3 a L arrivano da destra, passano sul principale e salgono nello schermo di sopra. Accanto a ogni pianeta compaiono nome e dati veri. Dietro c'è il cielo vero di stasera visto dall'Italia, con le 88 costellazioni: passando col mouse si accendono e mostrano il nome; sopra un pianeta lo fai rallentare e vedi altri dati.",
     desc: 'I pianeti del Sistema Solare attraversano gli schermi uno alla volta davanti alla Via Lattea, con nome e dati veri.',
-    props: { orologio: cb('Orologio'), nomi: cb('Nome e dati dei pianeti') } },
+    props: {
+      orologio: cb('Orologio'), nomi: cb('Nome e dati dei pianeti'),
+      costellazioni: cb('Cielo vero con le costellazioni'), mouse: cb('Interazione col mouse'),
+    } },
 ];
 
 // libs: file di shared/ oltre a kit.js (es. ['info'] → info.js), caricati in ordine prima di main.js

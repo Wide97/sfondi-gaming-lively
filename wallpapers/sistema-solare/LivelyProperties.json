@@ -52,6 +52,16 @@
     "value": true,
     "text": "Nome e dati dei pianeti"
   },
+  "costellazioni": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Cielo vero con le costellazioni"
+  },
+  "mouse": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Interazione col mouse"
+  },
   "fps": {
     "type": "dropdown",
     "value": 1,

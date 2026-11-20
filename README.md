@@ -26,7 +26,7 @@ Sfondi **animati** a tema gaming per il desktop di **Windows**, da usare con [Li
 | <img src="docs/img/rossoneri.jpg" width="260"> | **Rossoneri**<br>_Calcio · Curva Sud_ | Notte di stadio: coreografia rossonera con sette stelle, bandiere, fumogeni, la ola, fuochi d'artificio. Palette: Rossonero, Notte di Coppa, Trasferta, Oro | ✍️ scritta personalizzabile · 🛡️ immagine tua al centro · 🖱️ fuochi al clic · 🎵 musica · 🕒 tabellone |
 | <img src="docs/img/orizzonte.jpg" width="260"> | **Orizzonte**<br>_Soft · Meteo_ | Colline morbide sotto un cielo che segue l'ora vera (alba, giorno, tramonto, notte) e il meteo della tua città: nuvole, pioggia e neve quando ci sono davvero. Palette: Colline, Lago, Dune, Grafite | 🌦️ meteo attuale, prossime ore e giorni · 🌅 alba e tramonto · 🕒 orologio |
 | <img src="docs/img/bruma.jpg" width="260"> | **Bruma**<br>_Soft · Cruscotto_ | Nebbie di colore che si muovono piano, con un cruscotto discreto. Palette: Lavanda, Salvia, Notte, Sabbia | 📅 calendario con festività · 💻 CPU, GPU, RAM, rete · 🎵 brano in riproduzione · 🌦️ meteo |
-| <img src="docs/img/sistema-solare.jpg" width="260"> | **Sistema Solare**<br>_Spazio · Realistico_ | I pianeti attraversano gli schermi uno alla volta, in ordine dal Sole, davanti alla Via Lattea: ruotano sul loro asse e sono illuminati dal lato del Sole (anelli di Saturno, Grande Macchia Rossa, nuvole e luci delle città sulla Terra). Disegnati in WebGL. Palette: Realistica, Blu profondo, Nebulosa, Mono | 🪐 nome e dati veri di ogni pianeta · 🌠 stelle cadenti · 🕒 orologio |
+| <img src="docs/img/sistema-solare.jpg" width="260"> | **Sistema Solare**<br>_Spazio · Realistico_ | I pianeti attraversano gli schermi uno alla volta, in ordine dal Sole, davanti alla Via Lattea: ruotano sul loro asse e sono illuminati dal lato del Sole (anelli di Saturno, Grande Macchia Rossa, nuvole e luci delle città sulla Terra). Disegnati in WebGL. Dietro c'è il **cielo vero di stasera** con le 88 costellazioni. Palette: Realistica, Blu profondo, Nebulosa, Mono | 🪐 nome e dati veri di ogni pianeta · ✨ costellazioni vere · 🖱️ costellazioni e pianeti reagiscono al mouse · 🌠 stelle cadenti · 🕒 orologio |
 
 > **Rossoneri** è uno sfondo **non ufficiale** fatto da tifosi: non è affiliato né approvato dal club e il pacchetto non contiene stemmi, loghi o marchi ufficiali. Ci sono solo i colori, la scritta della coreografia (modificabile) e l'atmosfera da stadio.
 >
@@ -85,7 +85,7 @@ Gli schermi non sono indipendenti: la scena è **una sola** e scorre da un monit
 | **Portale Arcano** | il grande portale | su ogni secondario un cerchio di rune manda un fiume di energia dentro il portale; le lucciole salgono da uno schermo all'altro |
 | **Radar Tattico** | il radar | ogni contatto rilevato parte come pacchetto dal radar e arriva al registro sul secondario; con 3 schermi un satellite di sopra manda scansioni giù al radar |
 | **Rossoneri** | la curva con la coreografia, la porta e il tabellone | la ola e i tabelloni LED a bordo campo scorrono dai secondari verso la curva; con 3 schermi fumo, fasci di luce e fuochi d'artificio salgono nello schermo di sopra |
-| **Sistema Solare** | il nucleo della Via Lattea e il passaggio dei pianeti | i pianeti entrano dal secondario e attraversano la cornice verso il principale; con 3 schermi arrivano da destra, passano sul principale e salgono uscendo dallo schermo di sopra |
+| **Sistema Solare** | il nucleo della Via Lattea e il passaggio dei pianeti | i pianeti entrano dal secondario e attraversano la cornice verso il principale; con 3 schermi arrivano da destra, passano sul principale e salgono uscendo dallo schermo di sopra; con 2 schermi uno sopra l'altro sfilano sul monitor di sopra |
 
 **Come si attiva:**
 1. In Lively scegli la disposizione **Span**, cioè un solo sfondo esteso su tutti i monitor.
@@ -114,9 +114,17 @@ Gli schermi non sono indipendenti: la scena è **una sola** e scorre da un monit
 - **PC e musica** (Bruma): CPU, GPU, RAM e rete, e il brano che stai ascoltando (Spotify, browser e qualunque player che compare nei controlli multimediali di Windows). Li fornisce Lively, il pacchetto li attiva da solo. Nel browser non sono disponibili, e i pannelli che non hanno dati non compaiono.
 - **Dove vanno i pannelli**: con 2 o 3 schermi stanno sui secondari, così sul principale restano solo le icone. Con 1 schermo stanno in una colonna a destra.
 
+## Il cielo vero (Sistema Solare)
+
+Dietro ai pianeti c'è il cielo com'è **adesso**, visto dall'Italia guardando a sud: 1289 stelle fino a magnitudine 4,8 con il loro colore reale e le 88 costellazioni ufficiali. Il cielo gira piano come quello vero (15° l'ora), quindi la sera vedi Pegaso e Andromeda, d'inverno Orione e il Toro.
+
+- **Mouse**: avvicinando il cursore a una costellazione le sue linee si accendono e compaiono il nome e la stella più luminosa; sopra un pianeta la fila rallenta e compaiono gravità e temperatura media; le stelle seguono appena il cursore. Si spegne con *Personalizza → Interazione col mouse*.
+- I dati vengono da [d3-celestial](https://github.com/ofrohn/d3-celestial) di Olaf Frohn (licenza BSD, ricavati dai cataloghi Hipparcos e Stellarium). Si rigenerano con `node scripts/cielo.mjs`.
+- La fascia della Via Lattea è decorativa: non segue la posizione reale della galassia.
+
 ## Mouse e musica
 
-- **Mouse**: Ponte di Comando, Portale Arcano e Radar Tattico reagiscono al cursore. Controlla che nelle impostazioni di Lively l'input del mouse sullo sfondo sia attivo.
+- **Mouse**: Ponte di Comando, Portale Arcano, Radar Tattico e Sistema Solare reagiscono al cursore (Rossoneri al clic). Controlla che nelle impostazioni di Lively l'input del mouse sullo sfondo sia attivo.
 - **Musica**: Neon City e Portale Arcano si muovono a tempo con l'audio del PC. Lively passa l'audio da solo, non serve configurare nulla.
 
 ## Prestazioni
@@ -140,6 +148,7 @@ sfondi-gaming-lively/
 │  └─ thumbnail.jpg
 ├─ shared/kit.js              base comune: proprietà, palette, velocità, intensità, multi-schermo, audio, mouse
 ├─ shared/info.js             meteo, calendario, dati di sistema e musica, widget dei pannelli (Orizzonte, Bruma)
+├─ shared/cielo.js            stelle e costellazioni vere, tempo siderale, proiezione (generato da scripts/cielo.mjs)
 ├─ docs/                      galleria GitHub Pages (legge catalog.json) + immagini
 ├─ scripts/
 │  ├─ anteprime.mjs           rigenera le anteprime con Edge headless

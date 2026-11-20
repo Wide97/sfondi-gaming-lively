@@ -8,6 +8,11 @@
  *  - 2 schermi: i pianeti entrano da sinistra, attraversano la cornice ed escono a destra dal principale
  *  - 3 schermi a L: entrano da destra, passano sul principale e salgono uscendo dallo schermo di sopra
  *  - la Via Lattea è una sola fascia continua su tutti gli schermi, col nucleo sul principale
+ *
+ * Cielo vero (shared/cielo.js): stelle e costellazioni nella posizione che hanno adesso, viste
+ * dall'Italia guardando a sud; il cielo gira piano come quello reale (15° l'ora).
+ * Col mouse: le costellazioni vicine al cursore si accendono con nome e stella più luminosa,
+ * i pianeti sotto al cursore rallentano e mostrano altri dati, le stelle seguono il cursore.
  */
 (function () {
   'use strict';
@@ -28,6 +33,9 @@
     drift:   [.7, .85, 1],      // velocità delle stelle che scorrono
     meteor:  [0, .5, 1],        // frequenza delle stelle cadenti
     label:   [.55, .7, .85],
+    cons:    [.13, .19, .26],   // linee delle costellazioni a riposo
+    real:    [.8, .92, 1],      // stelle vere
+    parallax:[.6, .85, 1],      // quanto le stelle seguono il cursore
   };
   const lv = (k) => Kit.pick(LIVELLI[k]);
 
@@ -35,21 +43,21 @@
   // in raggi (anelli e alone), rot = rotazione (rad/s), roll/pitch = inclinazione dell'asse
   const PLANETS = [
     { id: 'mercurio', type: 0, name: 'Mercurio', r: .05, S: 1.15, rot: .004, roll: .02, pitch: .1,
-      facts: ['0,39 UA dal Sole', 'Ø 4.879 km', 'giorno 59 giorni', 'anno 88 giorni'] },
+      facts: ['0,39 UA dal Sole', 'Ø 4.879 km', 'giorno 59 giorni', 'anno 88 giorni'], more: 'gravità 3,7 m/s²  ·  temperatura media 167 °C' },
     { id: 'venere', type: 1, name: 'Venere', r: .08, S: 1.25, rot: -.003, roll: .05, pitch: .1,
-      facts: ['0,72 UA dal Sole', 'Ø 12.104 km', 'giorno 243 giorni', 'anno 225 giorni'] },
+      facts: ['0,72 UA dal Sole', 'Ø 12.104 km', 'giorno 243 giorni', 'anno 225 giorni'], more: 'gravità 8,9 m/s²  ·  temperatura media 464 °C' },
     { id: 'terra', type: 2, name: 'Terra', r: .085, S: 1.25, rot: .03, roll: .41, pitch: .2, moon: true,
-      facts: ['1 UA dal Sole', 'Ø 12.742 km', 'giorno 23 h 56 min', 'anno 365 giorni'] },
+      facts: ['1 UA dal Sole', 'Ø 12.742 km', 'giorno 23 h 56 min', 'anno 365 giorni'], more: 'gravità 9,8 m/s²  ·  temperatura media 15 °C' },
     { id: 'marte', type: 3, name: 'Marte', r: .062, S: 1.2, rot: .029, roll: .44, pitch: .2,
-      facts: ['1,52 UA dal Sole', 'Ø 6.779 km', 'giorno 24 h 37 min', 'anno 687 giorni'] },
+      facts: ['1,52 UA dal Sole', 'Ø 6.779 km', 'giorno 24 h 37 min', 'anno 687 giorni'], more: 'gravità 3,7 m/s²  ·  temperatura media −65 °C' },
     { id: 'giove', type: 4, name: 'Giove', r: .2, S: 1.2, rot: .07, roll: .05, pitch: .08,
-      facts: ['5,2 UA dal Sole', 'Ø 139.820 km', 'giorno 9 h 56 min', 'anno 11,9 anni'] },
+      facts: ['5,2 UA dal Sole', 'Ø 139.820 km', 'giorno 9 h 56 min', 'anno 11,9 anni'], more: 'gravità 24,8 m/s²  ·  temperatura media −110 °C' },
     { id: 'saturno', type: 5, name: 'Saturno', r: .15, S: 2.35, rot: .065, roll: .42, pitch: .38,
-      facts: ['9,58 UA dal Sole', 'Ø 116.460 km', 'giorno 10 h 33 min', 'anno 29,4 anni'] },
+      facts: ['9,58 UA dal Sole', 'Ø 116.460 km', 'giorno 10 h 33 min', 'anno 29,4 anni'], more: 'gravità 10,4 m/s²  ·  temperatura media −140 °C' },
     { id: 'urano', type: 6, name: 'Urano', r: .11, S: 2.1, rot: .04, roll: 1.66, pitch: .35,
-      facts: ['19,2 UA dal Sole', 'Ø 50.724 km', 'giorno 17 h 14 min', 'anno 84 anni'] },
+      facts: ['19,2 UA dal Sole', 'Ø 50.724 km', 'giorno 17 h 14 min', 'anno 84 anni'], more: 'gravità 8,7 m/s²  ·  temperatura media −195 °C' },
     { id: 'nettuno', type: 7, name: 'Nettuno', r: .105, S: 1.25, rot: .045, roll: .49, pitch: .18,
-      facts: ['30,1 UA dal Sole', 'Ø 49.244 km', 'giorno 16 h 6 min', 'anno 165 anni'] },
+      facts: ['30,1 UA dal Sole', 'Ø 49.244 km', 'giorno 16 h 6 min', 'anno 165 anni'], more: 'gravità 11,2 m/s²  ·  temperatura media −200 °C' },
   ];
   const MOON = { type: 8, r: .022, S: 1.05, rot: .01, roll: .1, pitch: .1 };
 
@@ -389,7 +397,8 @@ void main(){
       if (!K.visible(x, y)) continue;
       const pr = prof(x, y), keep = .22 + 1.5 * pr + bulge(x, y);
       if (rnd() * 2.6 > keep) continue;
-      const m = rnd(), size = m < .97 ? .5 + rnd() * .8 : 1.2 + rnd() * 1.3;
+      // col cielo vero le stelle casuali restano piccole: quelle brillanti sono quelle vere
+      const m = rnd(), size = m < .97 || realSky() ? .5 + rnd() * .8 : 1.2 + rnd() * 1.3;
       const [R, Gc, B] = cols[(rnd() * cols.length) | 0];
       const a = (.25 + rnd() * .75) * kS;
       c.fillStyle = `rgba(${R},${Gc},${B},${a})`;
@@ -420,12 +429,114 @@ void main(){
     c.globalCompositeOperation = 'source-over';
   }
 
+  /* ---------- cielo vero ---------- */
+  // osservatore: centro Italia. Il centro della vista è il meridiano (tempo siderale locale),
+  // un po' sopra l'equatore celeste: è la parte di cielo che stasera si vede guardando a sud.
+  const OBS = { lon: 12.5, dec: 18 };
+  const realSky = () => !!window.Cielo && Kit.props.costellazioni !== false;
+  let sky = null, skyAt = -1e9, hover = { c: null, k: 0, last: null }, par = { x: 0, y: 0 };
+
+  function buildSky(K) {
+    const W = K.W, H = K.H, u = ROW() / 1080, C = window.Cielo;
+    const proj = C.projector(C.lst(new Date(), OBS.lon), OBS.dec);
+    const S = Math.max(W, H) / (4 * Math.tan(27.5 * Math.PI / 180));      // ~110° sul lato lungo
+    const P = (ra, dec) => { const p = proj(ra, dec); return { x: W / 2 + p.x * S, y: H / 2 - p.y * S, ok: p.ok }; };
+    const L = sky && sky.L && sky.L.w === W && sky.L.h === H ? sky.L : K.offscreen(W, H), c = L.x;
+    c.clearRect(0, 0, W, H);
+    const kR = lv('real'), bright = [];
+    // stelle: dimensione e opacità dalla magnitudine, colore dall'indice B-V
+    const st = C.stars;
+    for (let i = 0; i < st.length; i += 4) {
+      const p = P(st[i], st[i + 1]);
+      if (!p.ok || p.x < -10 || p.y < -10 || p.x > W + 10 || p.y > H + 10 || !K.visible(p.x, p.y)) continue;
+      const m = st[i + 2], col = C.color(st[i + 3]).join(',');
+      const r = Math.max(.55, (5.3 - m) * .62) * u, a = Math.min(1, (.35 + (4.8 - m) * .16)) * kR;
+      if (m < 2.2) {
+        const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 5);
+        g.addColorStop(0, `rgba(${col},${a * .45})`); g.addColorStop(1, `rgba(${col},0)`);
+        c.fillStyle = g; c.fillRect(p.x - r * 5, p.y - r * 5, r * 10, r * 10);
+        bright.push({ x: p.x, y: p.y, r, col, ph: (i * 7.3) % 6.28 });
+      }
+      c.fillStyle = `rgba(${col},${a})`; c.beginPath(); c.arc(p.x, p.y, r, 0, 6.283); c.fill();
+    }
+    // costellazioni: linee tenui; i punti a schermo servono anche per il mouse
+    const cons = [];
+    c.strokeStyle = `rgba(170,195,255,${lv('cons')})`; c.lineWidth = Math.max(1, u); c.lineCap = 'round';
+    c.beginPath();
+    for (const k of C.cons) {
+      const segs = [];
+      for (const l of k.l) {
+        const pts = [];
+        for (let j = 0; j < l.length; j += 2) pts.push(P(l[j], l[j + 1]));
+        if (pts.some((q) => !q.ok)) continue;
+        segs.push(pts);
+        pts.forEach((q, j) => (j ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y)));
+      }
+      if (!segs.length) continue;
+      const all = segs.flat(), cx = all.reduce((s, q) => s + q.x, 0) / all.length, cy = all.reduce((s, q) => s + q.y, 0) / all.length;
+      if (cx < -W * .1 || cx > W * 1.1 || cy < -H * .1 || cy > H * 1.1) continue;
+      cons.push({ def: k, segs, cx, cy });
+    }
+    c.stroke();
+    sky = { L, cons, bright };
+  }
+
+  // distanza del punto dal segmento ab
+  function segDist(px, py, a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy || 1;
+    const t = Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / l2));
+    return Math.hypot(px - a.x - t * dx, py - a.y - t * dy);
+  }
+
+  // costellazione sotto al cursore (la più vicina entro un raggio), con dissolvenza
+  function updateHover(K) {
+    const m = K.mouse, u = ROW() / 1080, on = K.props.mouse !== false && m.inside && sky;
+    let best = null, bd = 34 * u;
+    if (on) {
+      const mx = m.x - par.x * 6, my = m.y - par.y * 4;                  // il cielo è spostato dalla parallasse
+      for (const k of sky.cons) for (const seg of k.segs) for (let i = 1; i < seg.length; i++) {
+        const d = segDist(mx, my, seg[i - 1], seg[i]);
+        if (d < bd) { bd = d; best = k; }
+      }
+    }
+    if (best && best !== hover.c) { hover.c = best; hover.k = Math.min(hover.k, .2); }
+    if (best) hover.last = best;
+    hover.k += ((best ? 1 : 0) - hover.k) * Math.min(1, K._frameDt * (best ? 5 : 2.5));
+    if (!best && hover.k < .02) hover.last = null;
+  }
+
+  function drawHover(ctx, K) {
+    const k = hover.last, a = hover.k;
+    if (!k || a < .02) return;
+    const u = ROW() / 1080;
+    ctx.save(); ctx.translate(par.x * 6, par.y * 4);
+    ctx.strokeStyle = `rgba(190,215,255,${.75 * a})`; ctx.lineWidth = 1.6 * u; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (const seg of k.segs) seg.forEach((q, j) => (j ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)));
+    ctx.stroke();
+    ctx.fillStyle = `rgba(230,240,255,${.9 * a})`;
+    for (const seg of k.segs) for (const q of seg) { ctx.beginPath(); ctx.arc(q.x, q.y, 2.2 * u, 0, 6.283); ctx.fill(); }
+    // nome sopra la figura
+    let top = Infinity, minX = Infinity, maxX = -Infinity;
+    for (const seg of k.segs) for (const q of seg) { top = Math.min(top, q.y); minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x); }
+    const lx = (minX + maxX) / 2, ly = Math.max(44 * u, top - 22 * u);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = `rgba(255,255,255,${.92 * a})`;
+    ctx.font = `300 ${20 * u}px "Segoe UI Light", "Segoe UI", Arial, sans-serif`;
+    ctx.fillText(k.def.n.toUpperCase().split('').join(' '), lx, ly);
+    if (k.def.b) {
+      ctx.font = `400 ${13 * u}px "Segoe UI", Arial, sans-serif`; ctx.fillStyle = `rgba(255,255,255,${.7 * a})`;
+      ctx.fillText(`stella più luminosa: ${k.def.b.n} (magnitudine ${String(k.def.b.m).replace('.', ',')})`, lx, ly + 20 * u);
+    }
+    ctx.restore();
+  }
+
   /* ---------- pianeti ---------- */
   function spawn(K, s0 = 0) {
     const def = PLANETS[nextIdx % PLANETS.length];
     nextIdx++;
     const R = def.r * ROW();
-    active.push({ def, R, s: s0, rot: Math.random() * 6.28, seed: (nextIdx * .1731) % 1, ax: axis(def.roll, def.pitch), alpha: 0,
+    active.push({ def, R, s: s0, rot: Math.random() * 6.28, seed: (nextIdx * .1731) % 1, ax: axis(def.roll, def.pitch), alpha: 0, hov: 0,
       moon: def.moon ? { ax: axis(MOON.roll, MOON.pitch), rot: 0, a: Math.random() * 6.28 } : null });
   }
   // distanza da lasciare tra un pianeta e il successivo
@@ -435,6 +546,7 @@ void main(){
     if (!gl && !glc) initGL();
     G = { path: buildPath(K), fixed: !!K.props.galleria };
     buildBackground(K);
+    sky = null; skyAt = -1e9;
     if (G.fixed) {
       // ?galleria=1: tutti i pianeti fermi in fila (per anteprime e controlli)
       active = PLANETS.map((def, i) => ({ def, R: def.r * ROW(), s: 0, rot: 1 + i, seed: (i * .1731) % 1, ax: axis(def.roll, def.pitch), alpha: 1,
@@ -487,7 +599,7 @@ void main(){
   }
 
   function drawLabel(ctx, K, p, x, y) {
-    const a = p.alpha * lv('label');
+    const a = p.alpha * (lv('label') + (1 - lv('label')) * (p.hov || 0));   // col mouse sopra l'etichetta è piena
     if (a < .02) return;
     const R = p.R, u = ROW() / 1080;
     // a destra del pianeta, oltre gli anelli e oltre l'orbita della Luna
@@ -501,6 +613,10 @@ void main(){
     ctx.font = `400 ${13 * u}px "Segoe UI", Arial, sans-serif`; ctx.fillStyle = 'rgba(255,255,255,.75)';
     ctx.fillText(p.def.facts.slice(0, 2).join('  ·  '), lx, ly + 8 * u);
     ctx.fillText(p.def.facts.slice(2).join('  ·  '), lx, ly + 27 * u);
+    if (p.hov > .02 && p.def.more) {
+      ctx.globalAlpha = p.alpha * p.hov; ctx.fillStyle = 'rgba(255,255,255,.9)';
+      ctx.fillText(p.def.more, lx, ly + 46 * u);
+    }
     ctx.globalAlpha = 1;
   }
 
@@ -516,8 +632,27 @@ void main(){
   }
 
   function draw(ctx, K) {
-    const W = K.W, H = K.H;
+    const W = K.W, H = K.H, mouseOn = K.props.mouse !== false && K.mouse.inside;
     ctx.drawImage(bg.c, 0, 0, W, H);
+
+    // parallasse: il cielo segue appena il cursore (più le stelle vicine)
+    const kp = lv('parallax');
+    par.x += ((mouseOn ? K.mouse.nx : 0) * kp - par.x) * Math.min(1, K._frameDt * 2);
+    par.y += ((mouseOn ? K.mouse.ny : 0) * kp - par.y) * Math.min(1, K._frameDt * 2);
+
+    // cielo vero: ridisegnato ogni 10 s (si sposta di pochi pixel al minuto)
+    if (realSky()) {
+      if (K.real - skyAt > 10 || !sky) { buildSky(K); skyAt = K.real; }
+      ctx.drawImage(sky.L.c, par.x * 6, par.y * 4, W, H);
+      const kt = lv('twinkle');
+      for (const s of sky.bright) {
+        const a = (.5 + .5 * Math.sin(K.real * .9 + s.ph)) * .3 * kt;
+        ctx.fillStyle = `rgba(${s.col},${a})`;
+        ctx.beginPath(); ctx.arc(s.x + par.x * 6, s.y + par.y * 4, s.r * 1.8, 0, 6.283); ctx.fill();
+      }
+      updateHover(K);
+      drawHover(ctx, K);
+    }
 
     // stelle che scorrono piano nella direzione dei pianeti (più veloci quelle più vicine)
     const dir = K.layout().mode === 3 ? -1 : 1, dk = lv('drift') * ROW() / 1080 * K.dt;
@@ -525,7 +660,7 @@ void main(){
       s.x += dir * DRIFT[s.k] * dk;
       if (s.x > W + 2) s.x -= W + 4; else if (s.x < -2) s.x += W + 4;
       ctx.fillStyle = s.col;
-      ctx.fillRect(s.x, s.y, s.s, s.s);
+      ctx.fillRect(s.x + par.x * (8 + s.k * 8), s.y + par.y * (5 + s.k * 5), s.s, s.s);
     }
 
     // poche stelle brillanti che scintillano piano
@@ -559,7 +694,9 @@ void main(){
     // pianeti in viaggio
     if (!G.fixed) {
       const speed = ROW() * .028;
-      for (const p of active) p.s += speed * K.dt;
+      // col mouse su un pianeta rallenta tutta la fila (così quelli dietro non lo raggiungono)
+      const slow = 1 - .8 * active.reduce((m, p) => Math.max(m, p.hov || 0), 0);
+      for (const p of active) p.s += speed * K.dt * slow;
       while (active.length && active[active.length - 1].s > G.path.len) active.pop();
       const first = active[0], nd = PLANETS[nextIdx % PLANETS.length];
       if (!first || first.s >= gapAfter(first, nd)) { spawn(K, 0); active.unshift(active.pop()); }
@@ -572,6 +709,8 @@ void main(){
       p.rot += p.def.rot * K.dt;
       const vis = K.visible(q.x, q.y) && q.x > p.R && q.x < W - p.R && q.y > p.R && q.y < H - p.R;
       p.alpha += ((vis ? 1 : 0) - p.alpha) * Math.min(1, K._frameDt * 1.5);
+      const over = mouseOn && Math.hypot(K.mouse.x - q.x, K.mouse.y - q.y) < p.R * Math.min(p.def.S, 1.6);
+      p.hov = (p.hov || 0) + ((over ? 1 : 0) - (p.hov || 0)) * Math.min(1, K._frameDt * 4);
       if (p.moon) {
         p.moon.a += K.dt * .12; p.moon.rot += MOON.rot * K.dt;
         const mx = q.x + Math.cos(p.moon.a) * p.R * 2.4, my = q.y + Math.sin(p.moon.a) * p.R * .45;
@@ -587,5 +726,6 @@ void main(){
   }
 
   const veil = [{ b: .9, s: .92, c: .98 }, { b: .96, s: .97, c: 1 }, { b: 1, s: 1, c: 1 }];
-  Kit.start({ palettes: PALETTES, veil, defaults: { nomi: true }, layouts: [4], build, draw });
+  Kit.start({ palettes: PALETTES, veil, defaults: { nomi: true, costellazioni: true, mouse: true }, layouts: [4], build, draw,
+    onProp(name) { if (name === 'costellazioni') { sky = null; skyAt = -1e9; } } });
 })();

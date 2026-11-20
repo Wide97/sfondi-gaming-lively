@@ -10,7 +10,7 @@
 <script>
   // Carica le librerie comuni (accanto a index.html nel pacchetto, in ../../shared/ nel repo), poi lo sfondo.
   (function () {
-    var libs = ["kit"];
+    var libs = ["kit","cielo"];
     function load(src, ok, ko) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.body.appendChild(s); }
     function next(i) {
       if (i === libs.length) return load('main.js');
