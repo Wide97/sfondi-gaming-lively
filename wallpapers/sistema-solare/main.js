@@ -277,6 +277,10 @@ void main(){
     if (lay.mode === 3) {
       const h = lay.rowH;
       p0 = { x: W + h * .55, y: m.cy }; mid = { x: m.cx, y: m.cy - h * .04 }; p1 = { x: lay.top.cx, y: -h * .55 };
+    } else if (lay.mode === 4) {
+      // 2 schermi verticali: i pianeti sfilano sul monitor di sopra, il principale resta alle icone
+      const h = lay.rowH, t = lay.top;
+      p0 = { x: -h * .55, y: t.cy + h * .06 }; mid = { x: W * .5, y: t.cy - h * .04 }; p1 = { x: W + h * .55, y: t.cy + h * .02 };
     } else if (lay.mode === 2) {
       p0 = { x: -H * .55, y: H * .62 }; mid = { x: W * .5, y: H * .42 }; p1 = { x: W + H * .55, y: H * .52 };
     } else {
@@ -304,6 +308,7 @@ void main(){
   // posizione del Sole (fuori schermo): a sinistra con 1-2 schermi, a destra con 3 a L
   function sunPos(K) {
     const lay = K.layout();
+    if (lay.mode === 4) return { x: -lay.rowH * .5, y: lay.top.cy };     // a sinistra del monitor di sopra, dove passano i pianeti
     return lay.mode === 3 ? { x: K.W + lay.rowH * .5, y: lay.rowY + lay.rowH * .5 } : { x: -lay.rowH * .5, y: lay.rowY + lay.rowH * .45 };
   }
 
@@ -327,11 +332,13 @@ void main(){
     let a, b;
     if (lay.mode === 3) { a = { x: W, y: H * .97 }; b = { x: W * .08, y: 0 }; }
     else if (lay.mode === 2) { a = { x: 0, y: H * .88 }; b = { x: W, y: H * .1 }; }
+    else if (lay.mode === 4) { a = { x: W * .12, y: H }; b = { x: W * .88, y: 0 }; }   // attraversa entrambi i monitor
     else { a = { x: W * .05, y: H * .95 }; b = { x: W * .95, y: H * .05 }; }
     const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
     const d = { x: dx / L, y: dy / L }, nrm = { x: -d.y, y: d.x };
     // nucleo galattico: proiezione del centro dello schermo principale sull'asse
-    const m = lay.main, t = (m.cx - a.x) * d.x + (m.cy - a.y) * d.y;
+    // (con 2 schermi verticali il nucleo sta sopra, così il principale resta più tranquillo)
+    const m = lay.mode === 4 ? lay.top : lay.main, t = (m.cx - a.x) * d.x + (m.cy - a.y) * d.y;
     const core = { x: a.x + d.x * t, y: a.y + d.y * t };
     return { a, d, nrm, core, width: Math.hypot(W, H) * .085 };
   }
@@ -498,7 +505,7 @@ void main(){
   }
 
   function drawClock(ctx, K) {
-    const lay = K.layout(), z = lay.mode === 2 ? lay.left : lay.mode === 3 ? lay.top : lay.main;
+    const lay = K.layout(), z = lay.mode === 2 ? lay.left : lay.top ? lay.top : lay.main;
     const u = z.h / 1080, ck = K.clock(), x = z.x + z.w * .05, y = z.y + z.h * .12;
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = 'rgba(255,255,255,.88)';
@@ -580,5 +587,5 @@ void main(){
   }
 
   const veil = [{ b: .9, s: .92, c: .98 }, { b: .96, s: .97, c: 1 }, { b: 1, s: 1, c: 1 }];
-  Kit.start({ palettes: PALETTES, veil, defaults: { nomi: true }, build, draw });
+  Kit.start({ palettes: PALETTES, veil, defaults: { nomi: true }, layouts: [4], build, draw });
 })();
