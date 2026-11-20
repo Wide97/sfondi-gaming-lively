@@ -16,3 +16,4 @@ Tutti i dettagli sono nel [README](https://github.com/Wide97/sfondi-gaming-livel
 | `rossoneri.zip` | Rossoneri (Calcio · Curva Sud) |
 | `orizzonte.zip` | Orizzonte (Soft · Meteo) |
 | `bruma.zip` | Bruma (Soft · Cruscotto) |
+| `sistema-solare.zip` | Sistema Solare (Spazio · Realistico) |
